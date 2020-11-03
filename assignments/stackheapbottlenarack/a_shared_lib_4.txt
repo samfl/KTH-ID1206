@@ -1,0 +1,13 @@
+There is a lot of junk in the middle, between the stack and the heap. Some are executable, 
+some writable and some are described as similar to: 
+    /usr/lib/x86_64-linux-gnu/ld-2.31.so
+
+All of these segments are allocated for shared libraries, either the code or areas used 
+for dynamic data structures.
+
+In this assignment, we have been using library procedures for printing messages, finding
+process identifiers and for allocating memory etc. All of these routines are located 
+somewhere in these segments.
+
+For example, if we free memory twice (deallocation) things will break since only malloc
+procedures keep information about the allocated data structures. 

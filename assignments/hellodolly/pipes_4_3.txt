@@ -1,0 +1,22 @@
+The beauty of standard I/O redirection is demonstrated while introducing the concepts of pipes. 
+A pipe is simply a FIFO-buffer (First In First Out). 
+When a pipe is created, 2 file descriptor entries are allocated (one for reading, one for writing).
+
+Since we are in control over the descriptor table before we start executing a program, we can make 
+one prgram send all its output to another program input. 
+From the shell, this is very powerful. 
+
+Example: 
+
+    1. ps axo sid (print the session identifier)
+    2. sort -u (sort lines and output only unique)
+    3. wc -l (count number of lines)
+
+    Can these be combined to find the number of sessions in the system?
+    
+    -> Yes, using the shell and pipes command '|': 
+
+        ps axo sid | sort -u | wc -l
+
+
+Number of sessins in my system (Lubuntu) was 62. 

@@ -9,18 +9,16 @@ int main (void)
 
     /* In parent - pid has a value -> "I'm the child XXXXX */
     /* In child - pid is 0 -> My child is called 0 */
+    /* A process can produce a value when it terminates, this value can be picked up by the mother process: */
     if (pid == 0)
     {
-        printf("I'm the child %d\n", getpid());
-        sleep(1); /* Delay, 1 second */
+        return 42;
     } else
     {
-        printf("My child is called %d\n", pid);
-        wait(NULL); /* Waiting for the child (any child it has spawned) process to terminate */
-        printf("My child has terminated\n");
+        int res; 
+        wait(&res); /* Waiting for the child, grabbing the return value and saving it to the mem-location of 'res'. */
+        printf("The result was: %d\n", WEXITSTATUS(res));
     }
-
-    printf("This is the end (%d)\n", getpid());
 
     return 0; 
 }

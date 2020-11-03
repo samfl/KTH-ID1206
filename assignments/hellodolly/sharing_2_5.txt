@@ -1,0 +1,15 @@
+Since the child process is a clone of the parent (mother) process, we do actually share some parts. 
+For example, we do share:
+    - References to open files. 
+
+1. If process A opens a file, a file table entry is created by the OS. 
+2. The process is given a reference to this entry
+3. This entry referenceis then saved in a file descriptor table owned by the process.
+4. Process A is cloned into process B. 
+5. Process B will have a copy of the file descriptor table. 
+6. Process B will have all references pointing to the same entries in the file table. 
+
+The standard output is nothing more than an entry in the file descriptor table, this is 
+why both process can write to it. 
+
+We read from the same standard input, so here's a race condition. 

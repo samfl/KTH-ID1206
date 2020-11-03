@@ -1,0 +1,18 @@
+Address: 0x7ffed89f5000
+
+Only 48 bits/12 nibbles are used (12 * 4).
+The 48th bit is a 0 (first bit in the nibble 0x7).
+
+In a x86-64 architecture address fields are 64-bits but only 48 is used: 
+- The upper most bits (63 -47) should all be the same. 
+
+Generally: If the upper-most bits are 0's, it's the user space.
+           If the upper-mst bits are 1's, it's the kernel space.
+
+Thus, the address 0x7ffed89f5000 can also be written as 0x0000 7ffe d89f 5000
+
+The user space ends in:     0x0000 7fff ffff ffff
+The kernel space starts in: 0xffff 8000 0000 0000
+
+Last row in the test program code_1_2 shows: ffffffffff600000 
+(A segment in kernel space mapped into user space to speed up execution of system calls)
