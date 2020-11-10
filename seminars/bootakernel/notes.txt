@@ -1,0 +1,70 @@
+Boot process is divided in 3 steps: 
+    - Firmware
+    - Bootloader
+    - Operating System
+
+
+FIRMWARE:
+    In a personal computer, the motherboard is built in a way such that the 
+    CPU will find a pre-installed program in a read-only or flash memory, the firmware.
+    It is often referred to as the Basic Input Output System (BIOS) and often follows
+    the Unified Extensible Firmware Interface (UEFI) standard. 
+
+    The role of the firmware is to detect memory modules, external devices, set cloc
+    speeds, monitor fans and perform a system test to verify that all hardware is 
+    functional, Power-On Self-Test (POST). 
+
+    Traditional BIOS firmware were very limited but today's modern UEFI compatible firmwares
+    is close to a smaller OS. We will learn how a traditional BIOS firmware is setup. 
+
+    First of, when the BIOS has performed the initial system testing, it will locate the primary
+    disk and read the first segment of 512 bytes. This segment is called the Master Boot Record
+    (MBR). Since BIOS does not know anything abut file system, we must place the MBR at a 
+    well defined position on the disk. 
+
+    The MBR is a small program that will immediately start to read a larger program from disk. 
+    This program could be an OS, an embedded system, but often it is a Boot loader. 
+
+BOOT LOADER:
+    A program compiled and stored on disk also called "boot manager". Its role is to examine what
+    the machine looks like. BIOS will provide some information but the boot loader knows more
+    about how the file system is arranged on the disk etc.
+
+    On a Linux machine the bootloader is often a GNU GRand Unified Boot Loader (GRUB) but there
+    are plenty of boot loaderrs to choose from independant of the OS to be choosen. GRUB can be
+    configured to boot one or several OS's , called dual boot. 
+
+    The boot loader wiill prepare many things that an OS need or can make use of. Often the boot
+    loader provides a GUI. 
+
+    Once the boot loader has determined which OS to start, it will read the kernel from disk and
+    jump to its first instruction. OS is now in control!
+
+OPERATING SYSTEM:
+    Start by taking control over the hardware. It will 
+    1. Move to 64-bit mode if not alreaedy performed. 
+    2. Create a stack
+    3. Set up a interrupt descriptor table
+    4. Initialize virtual memory
+    5. etc.. 
+
+    Then, it will organize 
+    1. The task scheduler
+    2. The file system
+    3. Many other mechanisms (before continuing with user services)
+
+    A large operating system is divided into modules, and not all modules are provided in the 
+    kernel when the system boots. Kernel modules can be brought in at a later stage depending on 
+    how the user wish to use the machine. 
+
+    The modularity allows the system to be modified to handle new hardware etc. The largest part 
+    of an operating system is all the modules or drivers needed to cope with various hardware. 
+
+    An operating system is nothing that is developed over a day or a month, it takes years. 
+    For inspiration, a newer OS is under development is called Redux and is written in the 
+    modern programming language Rust. 
+
+PROGRESS:
+    Download the tools.. 
+
+
