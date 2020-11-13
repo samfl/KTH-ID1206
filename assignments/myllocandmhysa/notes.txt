@@ -1,0 +1,8 @@
+1. Intro
+Implementation of malloc() !
+- Malloc is a library procedure running in user space. 
+- We will not implement a fast allocator
+- We will focus on learning the memory manager
+- A program can use our implementation instead of the standard library one
+
+2. The Interface
