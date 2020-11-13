@@ -1,0 +1,26 @@
+Signals are used by the OS to a process and between different processes or inside a process. 
+One can list all possible signals in a Unix system with command:
+> kill -l 
+
+There are 64 different options which can be specifed with options:
+> kill -9 equal to > kill SIGKILL
+
+An example of a signal is when you are running a process in shell and slams "ctrl-c" to terminate. 
+This is in fact a interrupt signal. 
+
+The sigaction is a library call that will change our signal table. 
+
+3.  In C there are no built in exception handling like in Java. However, signals can be used to 
+    handle exceptions. 
+
+6.  Summary:
+    Signals is the mechanism that the kernel uses to inform processes about exceptions in the 
+    normal execution. If the user has stated otherwise, the kernel will decide what to do. 
+
+    To decide what to do, a user can register a signal handler. The kernel will then pass control
+    to a specified procedure. 
+
+    Signals can also be used in between to send notifications or control processes. 
+    The signals themselves does not contain any information, instead the kernel can 
+    provide more information about who sent the signal and why.
+    
