@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "rand.h"
 
+/* #define ROUNDS 10 - OK, successful */
+/* #define ROUNDS 100 - Killed */
 #define ROUNDS 1000
 #define LOOPS 100000
 
@@ -26,15 +27,15 @@ int main(void)
                 fprintf(stderr, "malloc failed\n");
                 return(1); 
             }
-            /* writing to the memory so know it exists */
-            //*memory = 123; 
+            /* writing to the memory so we know it exists */
+            /* *memory = 123; - Commented Out, ROUNDS changed to 1000. */
             free(memory);
         }
         current = sbrk(0);
         int allocated = (int)((current - init ) / 1024);
         printf("%d\n", j);
         printf("The current top of the heap is %p. \n", current);
-        printf("increased by %d Kbyte\n", allocated);
+        printf("Increased by %d Kbyte\n", allocated);
     }
     return 0; 
 }

@@ -6,3 +6,32 @@ Implementation of malloc() !
 - A program can use our implementation instead of the standard library one
 
 2. The Interface
+
+4. 
+
+4.1 System calls
+the command strace executes a program and traps all the system calls and print them to standard output. 
+
+4.2 First, best, worst fit
+
+Internal fragmentation is when there is space in a memory block that is unused. 
+- Solution to internal fragmentation is to divide large blocks into smaller ones and then allocate. 
+External fragmentation is when we have penty of free space divided into small chunks. 
+- Solution to external fragmentation is to merge smaller adjacents chunks. 
+
+If a solution is implemented to divide chunks, we must have a solution to merge them or our
+free-list will will grow..
+
+4.3 Keep it simple
+Alternative: Allow a certain amount of internal fragmentation: Keep multiple free-lists for the differenT
+chunk sizes. E.g. powers of 2. We will only use 3/4 of the memory but management of the blocks gets very easy. 
+A good thing about even chunks is that we reduce the number of calls to sbrk.
+e requests memory of multiples of 4096 bytes ( a page).
+-> Memory is divided into chunks of the required size and added tó the corresponding free-list. 
+ Calls to malloc and free are extremely fast and 
+fragmentation is controlled. 
+
+4.4. Let's complicate things
+Problems while accessing the memory allocator concurrently with many threads..
+
+5. 

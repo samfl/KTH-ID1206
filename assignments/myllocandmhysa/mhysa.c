@@ -40,14 +40,14 @@ void* malloc(size_t size)
 
     /* use sbrk to allocate new memory */
     void* memory = sbrk(size + sizeof(struct chunk));
-    if (memory == (void* ) 1 )
+    if (memory == (void* ) -1 )
     {
         return NULL; 
     } else 
     {
         struct chunk *cnk = (struct chunk*) memory; 
         cnk->size = size; 
-        return memory; 
+        return (void*)(cnk + 1); 
     }
 }
 

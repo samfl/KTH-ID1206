@@ -26,7 +26,7 @@ void free(void* memory)
 
 /*
 
-In the first run it is the out-of-memory management pocess being invoked to kill the process. 
+In the first run it is the out-of-memory management process being invoked to kill the process. 
 (kernel runs out of memory)
 
 */
