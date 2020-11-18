@@ -1,0 +1,79 @@
+MALLOC-implementation
+
+Intro:
+
+    Alignment: e.g. 8 byte GNU malloc. 
+    - So, the pointer to the allocated memory on the heap is a multiple of 8. '
+    - Allocator must follow a strict dicipline because the block cannot be moved once allocated. 
+
+    Performance aspects (often conflicting):
+    - Throughput - Maximize the throughput. (operations/s)
+    - Peak memory utilization - Use as much memory as possible
+
+    Fragmentation:
+    - Internal (within the block) 
+    - External (Outside the block)
+
+    Key Allocator Policies:
+    - Placement policy
+            First, Next, Best
+            Tradeoff throughput - memory util
+            segregated free lists approzimates bestfit without searching the entire free list
+    - Splitting policy
+            When do we split free blocks? 
+            How much internal fragmentation are we willing to tolerate? 
+    - Coalescing policy
+            Immediate (as soon as we call free)
+            Deferred (deferring coalescing until needed)
+
+
+Problems:
+- How do we know how much memory to free given just a pointer? 
+    Standard:
+        - Keep length of the block in the word proceeding the block
+        - Called a header field or header
+        - Requires an extra word for every allocated block
+- How do we keep track of the free blocks?
+    Method 1 (Implicit List): 
+        - Implicit list using length (links all blocks)
+        - First bit could mark if the block is allocated or not
+        - 8 byte alignment
+        - 1 word to mark end of list
+        - Splitting 
+    Method 2 (Explicit List): 
+        - Explicit list using a linked list among the the free blocks
+        - We introduce pointers to previous and next free blocks
+        - Logically a double-linked list
+        - Physically, blocks can be in any order
+        - Using splitting and updates the pointers
+        - Where do we put a newly freed blocked? (LIFO or address-based)
+    Method 3 (Segregated free list): 
+        - Uses Explicit lists in conjunction
+        - Different free lists for different sizes
+        - Allocated cost (linera)
+        - Memory utilization will depend on first or best fit policy
+        - Concepts of splitting and boundry tag coalescing are general to all allocators. 
+        - For each size class have their own free-list (linked list)
+        - Use the appropriate free list & search the list, in case of no block found, use a larger class..
+        - If no block is found, we use the "sbrk()" asking OS for more heap mem. 
+        - Free and max-coalisce the result, reinsert the block into approprate list.
+        - Advantages
+            - Higher throughput (Log-time for power of 2 size classes)
+            - Better memory utilization (firstfit will approximate bestfit on entire heap)
+            - Extreme case (Gving each block its own size class is equivalent to bestfit)
+    Method 4 (Blocks sorted by size): 
+        - Can use a balanced binary tree red-black tree with pointers within eah free blocks (length as key)
+- How do we pick a block to use for allocation? (Many might fit)
+     - Find a free block
+            1. Firstfit (linear time complexity)
+            2. Nextfit (Better than linear)
+            3. Bestfit (Search list and take the one with fewest left overs)
+- What do we do with the extra space when allocating a struture
+  that is smaller than the free block it is placed in?
+- How do we reinsert freed block into heap? 
+    Simple: 
+        - Clear the allocted flag (bit) 
+        - BUT, will lead to fragmentation
+        - We must coaliesce the free block into a larger one. 
+    Bidirectional Coalescing - (How we coalesce with a previous block too) 
+        - Using a boundry tag (footer) copy of the header..
