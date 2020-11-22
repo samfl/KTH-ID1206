@@ -213,7 +213,7 @@ static struct chunk* find(size_t size)
 }
 
 /* Our 'malloc' */
-extern void *balloc(size_t size) {
+extern void* balloc(size_t size) {
 
   if( size == 0 )
   {

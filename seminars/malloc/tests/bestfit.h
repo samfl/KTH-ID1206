@@ -1,3 +1,3 @@
-void *balloc(size_t size);
+void* malloc(size_t size);
 
-void bree(void *memory);
+void free(void *memory);
