@@ -159,6 +159,101 @@ struct head* find(int size)
 	return NULL;
 }
 
+int len_of_flist(void)
+{
+	struct head* curr = flist;
+	int len = 0;
+	while(curr != NULL)
+	{
+		++len;
+		curr = curr->next;
+	}
+	return len;
+}
+
+int blocksize_of_flist(void)
+{
+	struct head* curr = flist;
+	int len = 0;
+	while(curr != NULL)
+	{
+		printf("size: %d\n",curr->size);
+		curr = curr->next;
+	}
+	return len;
+}
+
+int sanity(void)
+{
+
+	/* Check free list */
+	struct head* curr = flist;
+	struct head* prev = NULL;
+
+	while(curr != NULL)
+	{
+		/* Check if free-status is correct */
+		if (curr->free == FALSE)
+		{
+			return 1;
+		}
+
+		/* Check if size is larger or equal to 8 */
+		if (curr->size < MIN(0))
+		{
+			return 1;
+		}
+
+		/* Check if free in adjacent blocks are valid */
+		if (curr->free != before(curr)->bfree)
+		{
+			return 1;
+		}
+
+		/* Check if size in adjacent blocks are valid */
+		if (curr->size != before(curr)->bsize)
+		{
+			return 1;
+		}
+
+		prev = curr;
+		curr = curr->next;
+	}
+
+	/* Check arena */
+	/* Check if we have an arena */
+	if (!arena)
+	{
+		return 1;
+	} else
+	{
+		prev = arena;
+		curr = after(arena);
+
+		while (curr->size != 0)
+		{
+			if(prev->free != curr->bfree)
+			{
+				return 1;
+			}
+			if(prev->size != curr->bsize)
+			{
+				return 1;
+			}
+			if(curr->size % ALIGN != 0)
+			{
+				return 1;
+			}
+			if(curr->size >= MIN(0))
+			{
+				return 1;
+			}
+			prev = curr;
+			curr = after(curr);
+		}
+	}
+}
+
 void* dalloc(size_t req)
 {
 	if (req <= 0)
