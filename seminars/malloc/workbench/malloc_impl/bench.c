@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "rand.h"
-#include "mymal.h"
+#include "mylloc.h"
 
 /* Outer-loop bound */
 #define ROUNDS 1000
@@ -14,51 +14,51 @@
 #define BUFFER 100
 
 int main(void)
-{   
+{
     void* buffer[BUFFER];
     for(int i = 0; i < BUFFER; i++)
     {
-        buffer[i] = NULL; 
+        buffer[i] = NULL;
     }
 
     void* init = sbrk(0);
-    void* current; 
+    void* current;
 
     printf("The initial top of the heap is %p.\n", init);
 
     for(int j = 0; j < ROUNDS; j++)
-    {   
+    {
         printf("Outer-loop val (j): %d\n\t", j);
         for(int i = 0; i < LOOPS; i++)
         {
             printf("Inner-loop val (i): %d\n\t", i);
-            
-            int index = rand() % BUFFER; 
+
+            int index = rand() % BUFFER;
             printf("\t buffer[%d]: %p, ", index, buffer[index]);
 
             if(buffer[index] != NULL)
-            {   
+            {
                 bree(buffer[index]);
-                buffer[index] = NULL; 
+                buffer[index] = NULL;
                 printf("\t buffer[%d]: %p, freed\n\t", index, buffer[index]);
-            } else 
+            } else
             {
                 size_t size = (size_t) request();
                 printf("\t size: %ld, ", size);
 
-                int* memory; 
+                int* memory;
                 memory = balloc(size);
 
                 if (memory == NULL)
                 {
                     fprintf(stderr, "malloc failed\n");
-                    return(1); 
+                    return(1);
                 }
 
                 printf("\t Setting: buffer[%d] to %d at %p, ", index, memory, memory);
-                buffer[index] = memory; 
+                buffer[index] = memory;
                 printf("\t Result: buffer[%d]: %p", index, buffer[index]);
-                *memory = 123; 
+                *memory = 123;
 
                 void* curr = sbrk(0);
                 int alloc = (int)((curr - init ) / 1024);
@@ -73,11 +73,11 @@ int main(void)
         printf("The current top of the heap is %p. \n", current);
         printf("increased by %d Kbyte\n", allocated);
     }
-    return 0; 
+    return 0;
 }
 
-/* 
-Compile and link bench with mylloc: 
-> gcc -o bench mylloc.o bench.c 
+/*
+Compile and link bench with mylloc:
+> gcc -o bench mylloc.o bench.c
 */
 

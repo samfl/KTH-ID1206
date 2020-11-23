@@ -8,37 +8,37 @@
 #define ALIGN 8
 
 /* Chunk data structure */
-struct chunk 
+struct chunk
 {
   int size;
   struct chunk *next;
 };
 
 /* Free list reference */
-struct chunk *flist = NULL; 
+struct chunk *flist = NULL;
 
 extern int glob_count;
 
 /* return the lenth of the free-list, only for statistics */
-static int length_of_flist(void) 
+static int length_of_flist(void)
 {
   int i = 0;
   struct chunk *next  = flist;
-  while(next != NULL) 
+  while(next != NULL)
   {
     i++;
     next = next->next;
   }
-  return i; 
+  return i;
 }
 
 /* collect the sizes of all chunks in a buffer */
-static void sizes(int *buffer, int max) 
+static void sizes(int *buffer, int max)
 {
   struct chunk *next = flist;
   int i = 0;
 
-  while((next != NULL) & (i < max)) 
+  while((next != NULL) & (i < max))
   {
     buffer[i] = next->size;
     i++;
@@ -49,7 +49,7 @@ static void sizes(int *buffer, int max)
 /* Align a chunk size to a multiple of byte size <ALIGN> */
 static int align(int size) {
   int rem = size % ALIGN;
-  if(rem > 0) 
+  if(rem > 0)
   {
     size +=  (ALIGN - rem);
   }
@@ -57,15 +57,15 @@ static int align(int size) {
 }
 
 /* The free-list is ordered in address order. */
-static void insert(struct chunk* cnk) 
+static void insert(struct chunk* cnk)
 {
   struct chunk* next = flist;
   struct chunk *prev = NULL;
 
   /* Go the correct position */
-  while(next != NULL) 
+  while(next != NULL)
   {
-    if(cnk < next) 
+    if(cnk < next)
     {
       break;
     }
@@ -78,7 +78,7 @@ static void insert(struct chunk* cnk)
   if(prev == NULL)
   {
     flist = cnk;
-  } else 
+  } else
   {
     prev->next = cnk;
   }
@@ -86,7 +86,7 @@ static void insert(struct chunk* cnk)
 }
 
 /* if possible, coalece with other free blocks */
-static void coalesce(struct chunk *cnk) 
+static void coalesce(struct chunk *cnk)
 {
   struct chunk* next = flist;
   struct chunk *prev = NULL;
@@ -98,16 +98,16 @@ static void coalesce(struct chunk *cnk)
   char *prev_check = NULL;
 
   /* Go through flist */
-  while (next != NULL) 
+  while (next != NULL)
   {
-    if(cnk_check == (char*)next) 
+    if(cnk_check == (char*)next)
     {
-      if(prev_check == (char*)cnk) 
+      if(prev_check == (char*)cnk)
       {
         // coalesce with both chunks
         prev->size += cnk->size + next->size;
         prev->next = next->next;
-      } else 
+      } else
       {
           // coallece with next chunk
           cnk->size += next->size;
@@ -115,7 +115,7 @@ static void coalesce(struct chunk *cnk)
           if(prev == NULL)
           {
             flist = cnk;
-          } else 
+          } else
           {
             prev->next = cnk;
           }
@@ -123,7 +123,7 @@ static void coalesce(struct chunk *cnk)
         return;
     }
 
-    if(prev_check == (char*)cnk) 
+    if(prev_check == (char*)cnk)
     {
       // coallece with previous chunk
       prev->size += cnk->size;
@@ -131,14 +131,14 @@ static void coalesce(struct chunk *cnk)
       return;
     }
 
-    if(next > cnk) 
+    if(next > cnk)
     {
-      // regular insert 
+      // regular insert
       cnk->next = next;
       if(prev == NULL)
       {
 	      flist = cnk;
-      } else 
+      } else
       {
 	      prev->next = cnk;
       }
@@ -150,7 +150,7 @@ static void coalesce(struct chunk *cnk)
     next = next->next;
   } /* End of while loop */
 
-  if(prev_check == (char*)cnk) 
+  if(prev_check == (char*)cnk)
   {
     // coallece with final chunk
     prev->size += cnk->size;
@@ -163,28 +163,28 @@ static void coalesce(struct chunk *cnk)
   if(prev == NULL)
   {
     flist = cnk;
-  } else 
+  } else
   {
     prev->next = cnk;
   }
 }
 
 
-static struct chunk* find(size_t size) 
+static struct chunk* find(size_t size)
 {
   struct chunk *next = flist;
   struct chunk *prev = NULL;
   struct chunk* taken = NULL;
 
-  while(next != NULL) 
+  while(next != NULL)
   {
-    if (next->size >= size) 
+    if (next->size >= size)
     {
       taken = next;
-      if(prev != NULL) 
+      if(prev != NULL)
       {
 	      prev->next = taken->next;
-      } else 
+      } else
       {
 	      flist = taken->next;
       }
@@ -203,28 +203,28 @@ extern void* balloc(size_t size) {
   {
     return NULL;
   }
-    
+
   /* we only handle size of multiples of ALIGN */
   size = align(size);
-  
-  struct chunk* taken = find(size);
-  struct chunk* next = flist; 
 
-  if(taken != NULL) 
+  struct chunk* taken = find(size);
+  struct chunk* next = flist;
+
+  if(taken != NULL)
   {
     printf("\n\t\t\t taken: %d\n", taken->size);
 
     /* left over is total size of remaining chunk  */
     int leftover = (taken->size - size);
     printf("\t\t\t leftover: %d", leftover);
-    
-    if(leftover >= MIN) 
+
+    if(leftover >= MIN)
     {
-      // new is the leftover chunk 
+      // new is the leftover chunk
       struct chunk *new = (struct chunk*)(((char*)next) + size + sizeof(struct chunk));
 
       new->size = (leftover - sizeof(struct chunk));
-      // leftover is inserted in free list 
+      // leftover is inserted in free list
       insert(new);
 
       // we're now changing the size of taken
@@ -235,25 +235,25 @@ extern void* balloc(size_t size) {
   /* use sbrk to allocate more memory */
   void *memory = sbrk(size + sizeof(struct chunk));
 
-  if(memory == (void *)-1) 
+  if(memory == (void *)-1)
   {
     return NULL;
-  } else 
+  } else
   {
     struct chunk *cnk = (struct chunk*)memory;
     cnk->size = size;
     return  (void*)(cnk + 1);
-  } 
+  }
 }
 
 /* Our 'free' */
-extern void bree(void *memory) 
+extern void bree(void *memory)
 {
-  if(memory != NULL) 
+  if(memory != NULL)
   {
     /* we're jumping back one chunk position */
     struct chunk *cnk = (struct chunk*)(((struct chunk*)memory) - 1);
-    coalesce(cnk); 
+    coalesce(cnk);
   }
   return;
 }

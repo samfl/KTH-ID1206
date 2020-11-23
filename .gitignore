@@ -1,3 +1,9 @@
+# Added by me
+.metadata
+.eclipse
+Debug
+
+
 # Prerequisites
 *.d
 
