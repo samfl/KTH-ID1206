@@ -107,7 +107,8 @@ void detach(struct head* block)
 		block->prev->next = block->next;
 	} else
 	{
-		flist = NULL;
+		block->next->prev = NULL;
+		flist = block->next;
 	}
 }
 
@@ -151,6 +152,7 @@ struct head* find(int size)
 			{
 				return split(curr, size);
 			}
+			detach(curr);
 			return curr;
 		}
 
@@ -171,16 +173,14 @@ int len_of_flist(void)
 	return len;
 }
 
-int blocksize_of_flist(void)
+void blocksize_of_flist(void)
 {
 	struct head* curr = flist;
-	int len = 0;
 	while(curr != NULL)
 	{
-		printf("size: %d\n",curr->size);
+		printf("current size: %d\n", curr->size);
 		curr = curr->next;
 	}
-	return len;
 }
 
 int sanity(void)
@@ -254,6 +254,42 @@ int sanity(void)
 	}
 }
 
+struct head* merge(struct head* block)
+{
+	struct head* aft = after(block);
+	struct head* bef = before(block);
+
+	if (block->bfree)
+	{
+		/*unlink block bef. */
+		detach(bef);
+
+		/* calc and set tot size of merged blocks*/
+		bef->size = bef->size + block->size + HEAD;
+
+		/* upd- the block after the merged blocks */
+		aft->bsize = bef->size;
+
+		/* cont with the merged blocks*/
+		block = bef;
+	}
+
+	if (aft->free)
+	{
+		/* unlink the block */
+		detach(aft);
+
+		/* calc and set the totatl size of merged blocks */
+		block->size = block->size + aft->size + HEAD;
+
+		/* upd. the block after the merged block */
+		after(aft)->bsize = block->size;
+	}
+
+	insert(block);
+	return block;
+}
+
 void* dalloc(size_t req)
 {
 	if (req <= 0)
@@ -285,7 +321,7 @@ void dree(void* mem)
 		struct head* aft = after(block);
 		block->free = TRUE;
 		aft->bfree = TRUE;
-		insert(block);
+		merge(block);
 	}
 
 	return;

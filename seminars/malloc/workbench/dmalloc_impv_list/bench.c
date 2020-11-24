@@ -4,13 +4,8 @@
 #include "rand.h"
 #include "dlmall.h"
 
-/* Outer-loop bound */
 #define ROUNDS 10
-
-/* Inner-loop bound */
 #define LOOPS 1000
-
-/* Buffer-bound (buffer used to simulate a regular program) */
 #define BUFFER 100
 
 int main(void)
@@ -31,24 +26,21 @@ int main(void)
 
     for(int j = 0; j < ROUNDS; j++)
     {
-        printf("Outer-loop val (j): %d\n\t", j);
         for(int i = 0; i < LOOPS; i++)
         {
-            printf("Inner-loop val (i): %d\n\t", i);
-
+        	printf("Loop    -> %d \n", i);
             int index = rand() % BUFFER;
-            printf("\t buffer[%d]: %p, ", index, buffer[index]);
 
             if(buffer[index] != NULL)
             {
+            	printf("Calling  -> Dree\n");
                 dree(buffer[index]);
                 buffer[index] = NULL;
-                printf("\t buffer[%d]: %p, freed\n\t", index, buffer[index]);
                 ++num_of_drees;
             } else
             {
                 size_t size = (size_t) request();
-                printf("\t size: %ld, ", size);
+                printf("Calling -> Dalloc (%ld bytes) \n", size);
 
                 int* memory;
                 memory = dalloc(size);
@@ -56,37 +48,60 @@ int main(void)
                 if (memory == NULL)
                 {
                     fprintf(stderr, "malloc failed\n");
-                    printf("length of list: %d \t len_flist: %d \t size of block: %d \n", size, len_of_flist(), blocksize_of_flist());
                     return(1);
                 }
                 ++num_of_dallocs;
 
-                printf("\t Setting: buffer[%d] to %d at %p, ", index, memory, memory);
                 buffer[index] = memory;
-                printf("\t Result: buffer[%d]: %p", index, buffer[index]);
                 *memory = 123;
-
-                void* curr = sbrk(0);
-                int alloc = (int)((curr - init ) / 1024);
-                printf("\t inc by %d Kb\n\t", alloc);
             }
+            int prog_status = sanity();
+            if (prog_status)
+            {
+            	switch(prog_status)
+            	{
+            		case 1:
+            			printf("Incorrect free-status\n");
+					break;
+                	case 2:
+                		printf("Incorrect size\n");
+					break;
+                   	case 3:
+                   		printf("Incorrect size of adjacent block \n");
+					break;
+                   	case 4:
+                   		printf("Incorrect free of adjacent blocks \n");
+					break;
+                   	case 5:
+                   		printf("Incorrect arena \n");
+					break;
+                   	case 6:
+                   		printf("Incorrect free in adjacent arena blocks \n");
+					break;
+                   	case 7:
+                   		printf("Incorrect size in adjacent arena blocks \n");
+					break;
+                   	case 8:
+                   		printf("Incorrect alignment \n");
+					break;
+                   	case 9:
+                   		printf("Incorrect size2 \n");
+					break;
+                   	default:
+
+                   	break;
+            	}
+            	return 1;
+            }
+            flist_info();
         }
         current = sbrk(0);
         int allocated = (int)((current - init ) / 1024);
 
-        /* Print info! */
-        printf("%d\n", j);
         printf("The current top of the heap is %p. \n", current);
         printf("increased by %d Kbyte\n", allocated);
-
         printf("Total num of dree's: %d\n", num_of_drees);
         printf("Total num of dalloc's: %d\n", num_of_dallocs);
     }
     return 0;
 }
-
-/*
-Compile and link bench with mylloc:
-> gcc -o bench mylloc.o bench.c
-*/
-
