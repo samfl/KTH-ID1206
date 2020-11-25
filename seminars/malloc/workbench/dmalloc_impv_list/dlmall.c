@@ -23,7 +23,7 @@
 /**************************************************************************
  * Declaration / Definitions
  *************************************************************************/
-/* header (4 * 2) + (2 * 4) = 16 bytes */
+/* header (4 * 2) + (2 * 8) = 24 bytes */
 struct head
 {
 	uint16_t bfree;
@@ -201,7 +201,6 @@ struct head* find(uint16_t size)
 				detach(curr);
 				return curr;
 			}
-			/* Always endless loop -.- */
 			curr = curr->next;
 		}
 	}

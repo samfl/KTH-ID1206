@@ -1,6 +1,6 @@
 #include <math.h>
 
-#define MAX 1000
+#define MAX 4000
 #define MIN 8
 
 int request(void)

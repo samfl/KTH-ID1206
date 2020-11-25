@@ -1,9 +1,3 @@
-/*
- * dmalloc.c
- *
- *  Created on: Nov 23, 2020
- *      Author: samf
- */
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
