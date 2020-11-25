@@ -43,10 +43,10 @@ struct head* flist[16];
  *************************************************************************/
 void flist_info(void)
 {
-	int16_t len_tot = 0;
-	int16_t len_lst = 0;
+	uint16_t len_tot = 0;
+	uint16_t len_lst = 0;
 	printf("************* Flist-info START *************\n ");
-	for (int16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
+	for (uint16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
 	{
 		struct head* curr = *(flist + i);
 		while(curr != NULL)
@@ -78,16 +78,16 @@ struct head* before(struct head* block)
 	return (struct head*) (ptr);
 }
 
-int16_t get_flist_index(int16_t size)
+uint16_t get_flist_index(uint16_t size)
 {
 	if (size > 128){ return 15; }
 	if (size < 16) { return 0;  }
 	return (size / 8) - 2;
 }
 
-int16_t adjust(size_t size)
+uint16_t adjust(size_t size)
 {
-	int16_t rem = size % ALIGN;
+	uint16_t rem = size % ALIGN;
 	if(rem > 0) { size = size + (ALIGN - rem); }
 	return size;
 }
@@ -150,15 +150,22 @@ void insert(struct head* block)
 	*(flist + get_flist_index(block->size)) = block;
 }
 
-struct head* split(struct head* block, int16_t size)
+struct head* split(struct head* block, uint16_t size)
 {
-	int16_t rsize = block->size - (size + HEAD);
-	if (get_flist_index(rsize) != get_flist_index(block->size))
+	uint16_t rsize = (block->size) - (size + HEAD);
+	uint16_t new_index = get_flist_index(rsize);
+	uint16_t old_index = get_flist_index(block->size);
+
+	if (new_index != old_index)
 	{
 		detach(block);
+		block->size	= rsize;
 		insert(block);
+	} else
+
+	{
+		block->size	= rsize;
 	}
-	block->size	= rsize;
 
 	struct head *splt = after(block);
 	splt->bsize = block->size;
@@ -171,20 +178,20 @@ struct head* split(struct head* block, int16_t size)
 	return splt;
 }
 
-struct head* find(int16_t size)
+struct head* find(uint16_t size)
 {
 	if (arena == NULL)
 	{
-		for(int16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
+		for(uint16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
 		{
-			*(flist + i) = NULL;
+			flist[i] = NULL;
 		}
-		*(flist + 15) = new();
+		flist[15] = new();
 	}
-	int16_t index = get_flist_index(size);
-	for (int16_t i = index; i < sizeof(flist)/sizeof(flist[0]); i++)
+	uint16_t index = get_flist_index(size);
+	for (uint16_t i = index; i < sizeof(flist)/sizeof(flist[0]); i++)
 	{
-		struct head* curr = *(flist + i);
+		struct head* curr = flist[i];
 
 		while(curr != NULL)
 		{
@@ -206,7 +213,7 @@ struct head* merge(struct head* block)
 	struct head* aft = after(block);
 	struct head* bef = before(block);
 
-	if (block->bfree)
+	if (bef->free)
 	{
 		detach(bef);
 		bef->size = bef->size + block->size + HEAD;
@@ -226,9 +233,9 @@ struct head* merge(struct head* block)
 /**************************************************************************
  * Verification Procedure
  *************************************************************************/
-int16_t sanity(void)
+uint16_t sanity(void)
 {
-	for (int16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
+	for (uint16_t i = 0; i < sizeof(flist)/sizeof(flist[0]); i++)
 	{
 		/* Checking the Free-list */
 		struct head* curr = flist[i];
@@ -272,7 +279,7 @@ void* dalloc(size_t req)
 {
 	if (req <= 0) { return NULL; }
 
-	int16_t size = adjust(req);
+	uint16_t size = adjust(req);
 	struct head* taken = find(size);
 
 	if (taken == NULL) { return NULL; }
