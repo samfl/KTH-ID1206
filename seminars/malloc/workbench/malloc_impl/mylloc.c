@@ -17,7 +17,6 @@ struct chunk
 /* Free list reference */
 struct chunk *flist = NULL;
 
-extern int glob_count;
 
 /* return the lenth of the free-list, only for statistics */
 static int length_of_flist(void)

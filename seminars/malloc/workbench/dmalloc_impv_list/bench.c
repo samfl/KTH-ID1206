@@ -66,8 +66,7 @@ int main(void)
         time_spent_round = (double)(end - begin) / CLOCKS_PER_SEC;
         time_spent_tot += time_spent_round;
     }
-s
-    printf("Time spent average: %f \n ", time_spent_tot/ROUNDS);
     flist_info();
+    printf("Time spent average: %f \n ", time_spent_tot/ROUNDS);
     return 0;
 }

@@ -99,13 +99,14 @@ struct head* new(void)
 		printf("One arena already allocated\n");
 		return NULL;
 	}
+
+	struct head* new = mmap(NULL, ARENA, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (new == MAP_FAILED)
 	{
 		printf("mmap failed	: error %d\n", errno);
 		return NULL;
 	}
 
-	struct head* new = mmap(NULL, ARENA, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	struct head* sentinel = after(new);
 	uint32_t size = ARENA - 2*HEAD;
 

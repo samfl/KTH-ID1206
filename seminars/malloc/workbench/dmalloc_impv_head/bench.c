@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "rand.h"
+#include "dlmall.h"
 
 #define ROUNDS 10
 #define LOOPS 10000000
@@ -22,24 +23,28 @@ int main(void)
 
     printf("The initial top of the heap is %p.\n", init);
 
-    clock_t begin = clock();
+    double time_spent_tot;
+    double time_spent_round;
+    clock_t begin;
+    clock_t end;
 
     for(int j = 0; j < ROUNDS; j++)
     {
+    	begin = clock();
         for(int i = 0; i < LOOPS; i++)
         {
             int index = rand() % BUFFER;
 
             if(buffer[index] != NULL)
             {
-                free(buffer[index]);
+                dree(buffer[index]);
                 buffer[index] = NULL;
             } else
             {
                 size_t size = (size_t) request();
 
                 int* memory;
-                memory = malloc(size);
+                memory = dalloc(size);
 
                 if (memory == NULL)
                 {
@@ -56,11 +61,13 @@ int main(void)
 
         printf("The current top of the heap is %p. \n", current);
         printf("increased by %d Kbyte\n", allocated);
-    }
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-    printf("Time spent: %f \n ", time_spent);
+        end = clock();
+        time_spent_round = (double)(end - begin) / CLOCKS_PER_SEC;
+        time_spent_tot += time_spent_round;
+    }
+
+    printf("Time spent average: %f \n ", time_spent_tot/ROUNDS);
 
     return 0;
 }
