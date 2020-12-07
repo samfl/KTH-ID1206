@@ -1,0 +1,9 @@
+When doing measurements, be careful with optimizations:
+    - The regular execution was slow.
+    - The 1st level of optimization was a little better.
+    - The 2nd level of optimization was much faster.
+
+2.2 Some tests
+
+    - 64 Byte vs. 4 KByte - 64 pages (4KB is quicker with a factor of ~6)
+    - 
