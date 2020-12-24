@@ -15,62 +15,57 @@
 
 int main(void)
 {   
-    /* Creating the buffer */
     void* buffer[BUFFER];
     for(int i = 0; i < BUFFER; i++)
     {
         buffer[i] = NULL; 
     }
 
-    /* Find current location of the program break (which defines the end of the processes's data segment) */
     void* init = sbrk(0);
     void* current; 
 
     printf("The initial top of the heap is %p.\n", init);
 
     for(int j = 0; j < ROUNDS; j++)
-    {
+    {   
+        printf("Outer-loop val (j): %d\n\t", j);
         for(int i = 0; i < LOOPS; i++)
         {
-            /* Calculate the index */
+            printf("Inner-loop val (i): %d\n\t", i);
+            
             int index = rand() % BUFFER; 
+            printf("\t buffer[%d]: %p, ", index, buffer[index]);
 
-            /* If the randomized buffer index contains something, we want to free it. */
             if(buffer[index] != NULL)
             {   
-                /* Free the memory */
                 bree(buffer[index]);
-
-                /* Reset the memory */
                 buffer[index] = NULL; 
+                printf("\t buffer[%d]: %p, freed\n\t", index, buffer[index]);
             } else 
             {
-                /* Request a size (exponential decrease distribution, more smaller chunks are normal in a program), */
-                size_t size = (size_t) request(); 
+                size_t size = (size_t) request();
+                printf("\t size: %ld, ", size);
 
-                /* Allocate the memory based on the requested size */
                 int* memory; 
-                memory = balloc(size); 
+                memory = balloc(size);
 
-                /* Check if malloc was OK. */
                 if (memory == NULL)
                 {
                     fprintf(stderr, "malloc failed\n");
                     return(1); 
                 }
 
-                /* Assign the pointer to the allocated memory to our buffer. */
+                printf("\t Setting: buffer[%d] to %d at %p, ", index, memory, memory);
                 buffer[index] = memory; 
-
-                /* writing to the memory so know it exists */
+                printf("\t Result: buffer[%d]: %p", index, buffer[index]);
                 *memory = 123; 
+
+                void* curr = sbrk(0);
+                int alloc = (int)((curr - init ) / 1024);
+                printf("\t inc by %d Kb\n\t", alloc);
             }
         }
-
-        /* Again, check current location of the program break (which defines the end of the processes's data segment) */
         current = sbrk(0);
-
-        /* Calculate the size of the allocation */
         int allocated = (int)((current - init ) / 1024);
 
         /* Print info! */
