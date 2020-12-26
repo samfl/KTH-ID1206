@@ -1,0 +1,34 @@
+2018-01-12s
+
+1. Processer
+1.1 Stack vs.Heap
+1.2 Minnesmappning
+    - kod
+    - read-only data
+    - global data
+    - heap
+    - stack
+1.3 Systemanrop, I/O, filedescriptor, program, tricks
+1.4 Fri-list (malloc) 
+1.5 Intern paging
+1.6 Context - Eget biblotek fördelar / nackdelar
+
+2. Kommunikation
+2.1 Count, scope, processer, trådar, variabler etc.
+2.2 Pipes - hur fungerar pipes? 
+2.3 Namnrymd - Sockets? Nej? 
+
+3. Schemaläggning
+3.1 Tillståndsdiagram - Processer
+3.2 Reaktionstid vs. omloppstid
+3.3 Ratemonotonic scheduling - andra algoritmer - belastning etc.  
+
+4. Virtuellt minne
+4.1 Segmentering
+4.2 LRU - approximering, konsekvenser
+4.3 x86_64  addressering karaktäristik
+
+5. Filsystem och lagring
+5.1 lista innehållet i en map - mappar och filer (struktur, nummer, inode etc)
+5.2 Ta bort en fil (hur tar vi bort en fil?)
+5.3 Loggbaserade Filsystem 
