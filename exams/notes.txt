@@ -1,34 +1,34 @@
-2018-01-12s
+2018-01-12 / 2018-04-03
 
 1. Processer
-1.1 Stack vs.Heap
-1.2 Minnesmappning
+1.1 Stack vs.Heap / Fork() - Vad delas?
+1.2 Minnesmappning / Stack trace - Vad finns på stacken exempel
     - kod
     - read-only data
     - global data
     - heap
     - stack
-1.3 Systemanrop, I/O, filedescriptor, program, tricks
-1.4 Fri-list (malloc) 
-1.5 Intern paging
-1.6 Context - Eget biblotek fördelar / nackdelar
+1.3 Systemanrop, I/O, filedescriptor, program, tricks / Kod (hitta felet) - malloc felhantering
+1.4 Fri-list (malloc) / Hur fungerar heapen för e.g. Java - Garbage collector
+1.5 Intern paging / malloc implementation fråga (jämna block, exponent av 2)
+1.6 Context - Eget biblotek fördelar & nackdelar / I futex, förklara sched_yield(). 
 
 2. Kommunikation
-2.1 Count, scope, processer, trådar, variabler etc.
-2.2 Pipes - hur fungerar pipes? 
-2.3 Namnrymd - Sockets? Nej? 
+2.1 Count, scope, processer, trådar, variabler etc. / Kodexempel (fork & wait)
+2.2 Pipes - hur fungerar pipes? / sant eller falskt om pipes - läs på om pipes!
+2.3 Namnrymd - Sockets? Nej?  / Sockettyper
 
 3. Schemaläggning
-3.1 Tillståndsdiagram - Processer
-3.2 Reaktionstid vs. omloppstid
-3.3 Ratemonotonic scheduling - andra algoritmer - belastning etc.  
+3.1 Tillståndsdiagram - Processer / Schemaläggning (Round-robin, omlopp vs. respons)
+3.2 Reaktionstid vs. omloppstid / MLFQ regler & problem
+3.3 Ratemonotonic scheduling - andra algoritmer - belastning etc. / Vad innebär zombie  tillstånd? 
 
 4. Virtuellt minne
-4.1 Segmentering
-4.2 LRU - approximering, konsekvenser
-4.3 x86_64  addressering karaktäristik
+4.1 Segmentering / En sidad MMU med TLB (rita ut fysisk address, virtuell address, register basaddress, offset i sida, sidnummer, ramnummer, TLB sidtabell, sidtabllpost)
+4.2 LRU - approximering, konsekvenser / Gömma information is koden (malloc)
+4.3 x86_64  addressering karaktäristik / inverterad sidtabell (fördel & nackdel)
 
-5. Filsystem och lagring
-5.1 lista innehållet i en map - mappar och filer (struktur, nummer, inode etc)
-5.2 Ta bort en fil (hur tar vi bort en fil?)
-5.3 Loggbaserade Filsystem 
+5. Filsystem och lagring 
+5.1 lista innehållet i en map - mappar och filer (struktur, nummer, inode etc) / Beskriv ett enkelt fil sytem (datastrukturer, organisering på hårddisk)
+5.2 Ta bort en fil (hur tar vi bort en fil?) / hantering, öppna, redigera mappar &  filer etc
+5.3 Loggbaserade Filsystem / Hur vet man var inoder ligger etc? (Beskriv och rita)
