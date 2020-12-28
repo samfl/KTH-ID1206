@@ -78,12 +78,12 @@ int green_create(green_t* new, void* (*fun) (void*), void* arg)
 int green_yield(void)
 {
     green_t* susp = running; 
+    green_t* next = NULL; 
 
     // Add susp to ready queue. 
-    queue_enqueue(queue, *susp);
+    queue_enqueue(queue, susp);
 
     // Select the next thread for execution
-    green_t* next; 
     queue_dequeue(queue, next); 
 
     running = next;
