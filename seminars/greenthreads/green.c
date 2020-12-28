@@ -9,7 +9,7 @@
 #define STACK_SIZE 4096
 
 static ucontext_t main_cntx = {0};
-static green_t main_green = {&main_cntx, NULL, FALSE};
+static green_t main_green = {&main_cntx, NULL, NULL, NULL, NULL, NULL, FALSE};
 static green_t* running = &main_green;
 
 static queue_t* queue; 
@@ -26,19 +26,23 @@ void init()
 void green_thread(void)
 {
     green_t* this = running;  
+    green_t* next = NULL; 
 
     void* result = (*this->fun)(this->arg);
 
-    // Place waiting (joining) thread in ready queue. 
-    green_t* join = this->join; 
-    queue_enqueue(queue, *join); 
+    // Place waiting (joining) thread in ready queue.
+    if (this && (this->join != NULL))
+    {
+        queue_enqueue(queue, this->join); 
+    }
 
     // Save result of execution.
-
+    this->retval = result; 
+    
     // We're a zombie.
+    this->zombie = TRUE; 
 
     // Find the next thread to run.
-    green_t* next; 
     queue_dequeue(queue, next); 
 
     running = next; 

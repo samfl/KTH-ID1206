@@ -10,11 +10,11 @@ void queue_init(queue_t* q)
     pthread_mutex_init(&q->tail_lock, NULL); 
 }
 
-void queue_enqueue(queue_t* q, green_t thread)
+void queue_enqueue(queue_t* q, green_t* thread)
 {
     node_t* tmp = malloc(sizeof(node_t));
     assert(tmp != NULL);
-    tmp->thread = thread;
+    tmp->thread = *thread;
     tmp->next = NULL; 
 
     pthread_mutex_lock(&q->tail_lock);
@@ -33,7 +33,7 @@ void queue_dequeue(queue_t* q, green_t* thread)
         pthread_mutex_unlock(&q->head_lock);
         return -1; 
     }
-    *thread = new_head->thread;
+    *thread = tmp->thread;
     q->head = new_head; 
     pthread_mutex_unlock(&q->head_lock);
     free(tmp);

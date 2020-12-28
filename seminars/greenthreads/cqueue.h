@@ -19,7 +19,7 @@ typedef struct __queue_t
 } queue_t; 
 
 void queue_init(queue_t* q);
-void queue_enqueue(queue_t* q, green_t val);
+void queue_enqueue(queue_t* q, green_t* val);
 void queue_dequeue(queue_t* q, green_t* val);
 
 #endif
