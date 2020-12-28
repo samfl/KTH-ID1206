@@ -23,7 +23,7 @@ void queue_enqueue(queue_t* q, green_t* thread)
     pthread_mutex_unlock(&q->tail_lock);
 }
 
-void queue_dequeue(queue_t* q, green_t* thread)
+int queue_dequeue(queue_t* q, green_t* thread)
 {
     pthread_mutex_lock(&q->head_lock);
     node_t* tmp = q->head;

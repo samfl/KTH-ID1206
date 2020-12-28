@@ -2,6 +2,8 @@
 #define _CQUEUE_H
 
 #include <pthread.h>
+#include <stdlib.h>
+#include <assert.h>
 #include "green.h"
 
 typedef struct __node_t
@@ -20,6 +22,6 @@ typedef struct __queue_t
 
 void queue_init(queue_t* q);
 void queue_enqueue(queue_t* q, green_t* val);
-void queue_dequeue(queue_t* q, green_t* val);
+int queue_dequeue(queue_t* q, green_t* val);
 
 #endif
