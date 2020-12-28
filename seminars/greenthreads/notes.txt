@@ -1,0 +1,12 @@
+ucontext.h
+
+Allows for user-level context switching throught the functions:
+
+getcontext
+setcontext
+makecontext
+swapcontext
+
+and type:
+
+ucontext_t

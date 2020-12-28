@@ -1,6 +1,10 @@
 #ifndef _GREEN_H
 #define _GREEN_H
 
+#include <stdlib.h>
+#include <ucontext.h>
+#include <assert.h>
+#include <stdio.h>
 #include <ucontext.h>
 
 /* Representation of our green thread. */
@@ -14,6 +18,9 @@ typedef struct green_t
     void* retval; 
     int zombie;
 } green_t;
+
+/* Print the ready-queue */
+void print_queue(void);
 
 /* Initializes a green thread. */
 int green_create(green_t* thread, void* (*fun)(void*), void* arg);

@@ -18,15 +18,17 @@ int main(void)
     green_t g0, g1; 
     int a0 = 0; 
     int a1 = 1; 
+
     print_queue();
+
     green_create(&g0, test, &a0);
-    print_queue();
     green_create(&g1, test, &a1);
+
     print_queue();
 
     green_join(&g0, NULL);
-    print_queue();
     green_join(&g1, NULL); 
+
     print_queue();
     
     printf("done\n");

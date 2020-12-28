@@ -1,20 +1,22 @@
-#include <stdlib.h>
-#include <ucontext.h>
-#include <assert.h>
 #include "green.h"
 
 #define FALSE 0
 #define TRUE 1
-
 #define STACK_SIZE 4096
 
+/* Function Prototypes */
+static void enqueue(green_t* thread);
+static green_t* dequeue(void);
+
+/* Varible Declarations */
 static ucontext_t main_cntx = {0};
 static green_t main_green = {&main_cntx, NULL, NULL, NULL, NULL, NULL, FALSE};
 static green_t* running = &main_green;
 static green_t* queue_head = NULL;
 static green_t* queue_tail = NULL;
 
-void enqueue(green_t* thread)
+/* Enqueue a thread from the back (tail) */
+static void enqueue(green_t* thread)
 {
 	if (queue_head == NULL)
 	{
@@ -28,7 +30,9 @@ void enqueue(green_t* thread)
 		return;
 	}
 }
-green_t* dequeue(void)
+
+/* Dequeue a thread from the front (head) */
+static green_t* dequeue(void)
 {
 	if (queue_head == NULL)
 	{
@@ -42,6 +46,7 @@ green_t* dequeue(void)
 	}
 }
 
+/* Print out content of the ready-queue */
 void print_queue(void)
 {
 	green_t* iter = queue_head;
@@ -60,15 +65,21 @@ void print_queue(void)
 	}
 }
 
+/* '__attribute__' allows us to specify 'constructor' */
+/* 'constructor' causes the func to be automatically called execution enters main() */
 static void init() __attribute__((constructor));
 
-/* Initializes the main_cntx so when we call the scheduling function for the first time the running thread will be properly initialized. */
+/* Initializes the main_cntx */
+/* When we call the scheduling function for the first time the running thread will be properly initialized. */
 void init()
 {
+    /* Initializing the structure, pointed at ucp, to the currently active context. */
     getcontext(&main_cntx);
     return;
 }
 
+/* Function that will start execution of the real function. */
+/* When returning from the call, it will terminate the thread. */
 void green_thread(void)
 {
     green_t* this = running;  
@@ -99,10 +110,12 @@ void green_thread(void)
 int green_create(green_t* new, void* (*fun) (void*), void* arg)
 {
     ucontext_t* cntx = (ucontext_t*) malloc(sizeof(ucontext_t));
+    /* Initializing the structure, pointed at ucp, to the currently active context. */
     getcontext(cntx);
 
+    /* makecontext() function modifies the context pointed to by ucp (via getcontext)  */
+    /* Caller must allocate a new stack for this context and assign its address to ucp->uc_stack before */
     void* stack = malloc(STACK_SIZE);
-
     cntx->uc_stack.ss_sp = stack; 
     cntx->uc_stack.ss_size = STACK_SIZE;
     makecontext(cntx, green_thread, 0);
@@ -133,6 +146,7 @@ int green_yield(void)
     green_t* next = dequeue();
 
     running = next;
+    /* swapcontext() function saves the current context, in the structure pointer at by oucp, activates the context pointer at bt ucp */
     swapcontext(susp->context, next->context);
 
     return 0; 
@@ -153,6 +167,7 @@ int green_join(green_t* thread, void** res)
         green_t* next = dequeue();
 
         running = next; 
+        /* swapcontext() function saves the current context, in the structure pointer at by oucp, activates the context pointer at bt ucp */
         swapcontext(susp->context, next->context);
     }
 
