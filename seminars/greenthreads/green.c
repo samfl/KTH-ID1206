@@ -46,7 +46,7 @@ void green_thread(void)
     queue_dequeue(queue, next); 
 
     running = next; 
-    setcontext(next->context);
+    setcontext(running->context);
 }
 
 /* Initializes a green thread. */
@@ -99,12 +99,12 @@ int green_join(green_t* thread, void** res)
     if (!thread->zombie)
     {
         green_t* susp = running; 
+        green_t* next; 
 
         // Add as joining thread.
-        pthread_mutex_join(&susp);
+        thread->join = susp; 
 
         // Select the next thread for execution.
-        green_t* next; 
         queue_dequeue(queue, next); 
 
         running = next; 
@@ -112,8 +112,10 @@ int green_join(green_t* thread, void** res)
     }
 
     // Collect result. 
+    res = thread->retval; 
 
     // Free context. 
+    free(thread->context);
 
     return 0; 
 }
