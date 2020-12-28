@@ -1,34 +1,34 @@
-2018-01-12 / 2018-04-03
+2018-01-12 / 2018-04-03 / 2019-01-11 / 2019-04-16
 
 1. Processer
-1.1 Stack vs.Heap / Fork() - Vad delas?
-1.2 Minnesmappning / Stack trace - Vad finns på stacken exempel
+1.1 Stack vs.Heap / Fork() - Vad delas? / Stack eller Heap (Motivera) / Stack eller heap
+1.2 Minnesmappning / Stack trace - Vad finns på stacken exempel / Vad skrivs ut (fork) / Vad skrivs ut, vad skulle kunna skrivas ut (fork)
     - kod
     - read-only data
     - global data
     - heap
     - stack
-1.3 Systemanrop, I/O, filedescriptor, program, tricks / Kod (hitta felet) - malloc felhantering
-1.4 Fri-list (malloc) / Hur fungerar heapen för e.g. Java - Garbage collector
-1.5 Intern paging / malloc implementation fråga (jämna block, exponent av 2)
-1.6 Context - Eget biblotek fördelar & nackdelar / I futex, förklara sched_yield(). 
+1.3 Systemanrop, I/O, filedescriptor, program, tricks / Kod (hitta felet) - malloc felhantering / Stack trace (program mem-trace, mem-mapping) / lock (syncNcomp, nackdel & fördel)
+1.4 Fri-list (malloc) / Hur fungerar heapen för e.g. Java - Garbage collector / Head (free-list förklara) / 
+1.5 Intern paging / malloc implementation fråga (jämna block, exponent av 2) / Intruktion "INT" IDT:er, IDTR (IDT kunskap)
+1.6 Context - Eget biblotek fördelar & nackdelar / I futex, förklara sched_yield(). / Bibloteksanrop vs. systemanrop (OS, vad tillhör?, hur funkar resp.?)
 
 2. Kommunikation
-2.1 Count, scope, processer, trådar, variabler etc. / Kodexempel (fork & wait)
-2.2 Pipes - hur fungerar pipes? / sant eller falskt om pipes - läs på om pipes!
-2.3 Namnrymd - Sockets? Nej?  / Sockettyper
+2.1 Count, scope, processer, trådar, variabler etc. / Kodexempel (fork & wait) / Buffer (lås & trådar) / Pipes (läsa in utskriften ac ett program i ett annat)
+2.2 Pipes - hur fungerar pipes? / sant eller falskt om pipes - läs på om pipes! / pipes (flowcontrol) / Delat minne via mmap() (länkade datastrukturer)
+2.3 Namnrymd - Sockets? Nej?  / Sockettyper / Val av socket / 
 
 3. Schemaläggning
-3.1 Tillståndsdiagram - Processer / Schemaläggning (Round-robin, omlopp vs. respons)
-3.2 Reaktionstid vs. omloppstid / MLFQ regler & problem
-3.3 Ratemonotonic scheduling - andra algoritmer - belastning etc. / Vad innebär zombie  tillstånd? 
+3.1 Tillståndsdiagram - Processer / Schemaläggning (Round-robin, omlopp vs. respons) / Schemaläggning (Shortest time to completion, preemptive shortest jobs first) / Shortest Job First (arrrival tme, exec time, tunr around time, response time)
+3.2 Reaktionstid vs. omloppstid / MLFQ regler & problem () / Paging alogoritmer (slump, förlara prestanda) / Stride schemaläggning (förklara för pass value och stride fungerar)
+3.3 Ratemonotonic scheduling - andra algoritmer - belastning etc. / Vad innebär zombie  tillstånd? / Priotiry inversion (förklara problemet)
 
 4. Virtuellt minne
-4.1 Segmentering / En sidad MMU med TLB (rita ut fysisk address, virtuell address, register basaddress, offset i sida, sidnummer, ramnummer, TLB sidtabell, sidtabllpost)
-4.2 LRU - approximering, konsekvenser / Gömma information is koden (malloc)
-4.3 x86_64  addressering karaktäristik / inverterad sidtabell (fördel & nackdel)
+4.1 Segmentering / En sidad MMU med TLB (rita ut fysisk address, virtuell address, register basaddress, offset i sida, sidnummer, ramnummer, TLB sidtabell, sidtabllpost) / klockalgoritm (page replacement, approximativ algoritm) / pageivided virtuellt minne, intern fragmentering
+4.2 LRU - approximering, konsekvenser / Gömma information is koden (malloc) / Operationer och teori bakom buddy-algoritmen (malloc) / hierarkist sidtabell (föreslå rita och förklara address översättning)
+4.3 x86_64  addressering karaktäristik / inverterad sidtabell (fördel & nackdel) / sidtabeller och addresser (virtuellt och fysiskt minne, x86 arch)
 
 5. Filsystem och lagring 
-5.1 lista innehållet i en map - mappar och filer (struktur, nummer, inode etc) / Beskriv ett enkelt fil sytem (datastrukturer, organisering på hårddisk)
-5.2 Ta bort en fil (hur tar vi bort en fil?) / hantering, öppna, redigera mappar &  filer etc
-5.3 Loggbaserade Filsystem / Hur vet man var inoder ligger etc? (Beskriv och rita)
+5.1 lista innehållet i en map - mappar och filer (struktur, nummer, inode etc) / Beskriv ett enkelt fil sytem (datastrukturer, organisering på hårddisk) / Koppla ihop egenskap och plats for filer, mappar och inoder etc / Vad kan hända vid en krasch
+5.2 Ta bort en fil (hur tar vi bort en fil?) / hantering, öppna, redigera mappar &  filer etc / mappar och länktyper (access, typer, minnesmappning) / Loggbaserat filsystem (hålla koll på block som kan återanvändas)
+5.3 Loggbaserade Filsystem / Hur vet man var inoder ligger etc? (Beskriv och rita) / Journalbaserat filsystem (Påståenden)
