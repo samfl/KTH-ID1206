@@ -1,3 +1,6 @@
+#ifndef _GREEN_H
+#define _GREEN_H
+
 #include <ucontext.h>
 
 /* Representation of our green thread. */
@@ -20,3 +23,5 @@ int green_yield(void);
 
 /* The current thread is suspended waiting for a thread to terminate. */
 int green_join(green_t* thread, void** val); 
+
+#endif

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include <assert.h>
-#include "green.h"
+#include "cqueue.h"
 
 #define FALSE 0
 #define TRUE 1
@@ -9,8 +9,10 @@
 #define STACK_SIZE 4096
 
 static ucontext_t main_cntx = {0};
-static green_t main_green = {&main_cntx, NULL, FALSE}
+static green_t main_green = {&main_cntx, NULL, FALSE};
 static green_t* running = &main_green;
+
+static queue_t* queue; 
 
 static void init() __attribute__((constructor));
 
@@ -18,6 +20,7 @@ static void init() __attribute__((constructor));
 void init()
 {
     getcontext(&main_cntx);
+    queue_init(queue); 
 }
 
 void green_thread(void)
@@ -27,12 +30,16 @@ void green_thread(void)
     void* result = (*this->fun)(this->arg);
 
     // Place waiting (joining) thread in ready queue. 
+    green_t* join = this->join; 
+    queue_enqueue(queue, *join); 
 
     // Save result of execution.
 
     // We're a zombie.
 
     // Find the next thread to run.
+    green_t* next; 
+    queue_dequeue(queue, next); 
 
     running = next; 
     setcontext(next->context);
@@ -69,8 +76,11 @@ int green_yield(void)
     green_t* susp = running; 
 
     // Add susp to ready queue. 
+    queue_enqueue(queue, *susp);
 
     // Select the next thread for execution
+    green_t* next; 
+    queue_dequeue(queue, next); 
 
     running = next;
     swapcontext(susp->context, next->context);
@@ -87,8 +97,11 @@ int green_join(green_t* thread, void** res)
         green_t* susp = running; 
 
         // Add as joining thread.
+        pthread_mutex_join(&susp);
 
         // Select the next thread for execution.
+        green_t* next; 
+        queue_dequeue(queue, next); 
 
         running = next; 
         swapcontext(susp->context, next->context);
