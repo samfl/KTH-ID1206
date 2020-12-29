@@ -316,7 +316,7 @@ int green_mutex_lock(green_mutex_t* mutex)
         swapcontext(susp->context, next->context);
     } else 
     {
-        // Take the lock ("Pass the baton")
+        // Acquire lock ("Pass the baton")
         mutex->taken = TRUE; 
     }
 
@@ -328,6 +328,21 @@ int green_mutex_lock(green_mutex_t* mutex)
 /* Release the lock for green mutex */
 int green_mutex_unlock(green_mutex_t* mutex)
 {
+    // Block timer interrupt
+    sigprocmask(SIG_BLOCK, &block, NULL);
 
+    if (mutex->head != NULL)
+    {
+        // Move suspended thread to ready queue
+        enqueue(mutex->head);
+        mutex->head = mutex->head->next;
+    } else 
+    {
+        // Release lock
+        mutex->taken = FALSE; 
+    }
+
+    // Unblock timer interrupt
+    sigprocmask(SIG_UNBLOCK, &block, NULL);
     return 0; 
 }
