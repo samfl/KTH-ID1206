@@ -27,6 +27,14 @@ typedef struct _green_cond_t
     green_t* head; 
 } green_cond_t; 
 
+/* Representation of our green_mutex */
+typedef struct _green_mutex_t
+{
+    volatile int taken;
+    // Handle the list 
+    green_t* head; 
+} green_mutex_t;
+
 /* Print the ready-queue */
 void print_queue(void);
 
@@ -47,5 +55,14 @@ void green_cond_wait(green_cond_t* condv);
 
 /* Move the first suspended threadd to the reay-queue */
 void green_cond_signal(green_cond_t* condv);
+
+/* Initialize a green mutex. */
+int green_mutex_init(green_mutex_t* mutex);
+
+/* Acquire the lock for green mutex */
+int green_mutex_lock(green_mutex_t* mutex);
+
+/* Release the lock for green mutex */
+int green_mutex_unlock(green_mutex_t* mutex);
 
 #endif

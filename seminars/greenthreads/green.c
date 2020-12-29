@@ -239,8 +239,9 @@ void green_cond_wait(green_cond_t* condv)
     sigprocmask(SIG_BLOCK, &block, NULL);
 
     green_t* susp = running; 
-    green_t* curr = condv->head; 
 
+    /* Append suspended thread to list */
+    green_t* curr = condv->head; 
     if (curr != NULL)
     {
         while (curr->next != NULL)
@@ -271,4 +272,62 @@ void green_cond_signal(green_cond_t* condv)
         condv->head = condv->head->next; 
     }
     return; 
+}
+
+/* Initialize a green mutex. */
+int green_mutex_init(green_mutex_t* mutex)
+{
+    mutex->taken = FALSE; 
+
+    // Initialize fields
+    mutex->head = NULL; 
+
+    return 0; 
+}
+
+/* Acquire the lock for green mutex */
+int green_mutex_lock(green_mutex_t* mutex)
+{
+    // Block timer interrupt
+    sigprocmask(SIG_BLOCK, &block, NULL);
+
+    green_t* susp = running; 
+    if (mutex->taken)
+    {   
+        if (mutex->head == NULL)
+        {
+            mutex->head = susp; 
+        } else
+        {
+            /* Append suspended thread to list */
+            green_t* curr = mutex->head;
+            while (curr != NULL)
+            {
+                curr = curr->next; 
+            }
+            curr->next = susp; 
+        }
+        
+        // Suspend the running thread
+        green_t* next = dequeue();
+
+        // Find the next thread
+        running = next;
+        swapcontext(susp->context, next->context);
+    } else 
+    {
+        // Take the lock ("Pass the baton")
+        mutex->taken = TRUE; 
+    }
+
+    // Unblock timer interrupt
+    sigprocmask(SIG_UNBLOCK, &block, NULL);
+    return 0; 
+}
+
+/* Release the lock for green mutex */
+int green_mutex_unlock(green_mutex_t* mutex)
+{
+
+    return 0; 
 }
