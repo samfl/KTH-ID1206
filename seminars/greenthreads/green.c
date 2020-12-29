@@ -55,10 +55,11 @@ void print_queue(void)
 		printf("Ready-queue empty!\n");
 		return;
 	} else
-	{
+	{   
+        printf("Ready-queue:\n"); 
 		while (iter != NULL)
 		{
-			printf("Ready-queue thread: %p\n", iter->arg);
+			printf("\t thread: %p\n", iter->arg);
 			iter = iter->next;
 		}
 		return;
@@ -178,4 +179,47 @@ int green_join(green_t* thread, void** res)
     free(thread->context);
 
     return 0; 
+}
+
+/* Initialize the green_cond_var */
+void green_cond_init(green_cond_t* condv)
+{
+    condv->head = NULL; 
+    return; 
+}
+
+/* Suspend current thread on the condtition */
+void green_cond_wait(green_cond_t* condv)
+{   
+    green_t* susp = running; 
+    green_t* curr = condv->head; 
+
+    if (curr != NULL)
+    {
+        while (curr->next != NULL)
+        {
+            curr = curr->next; 
+        }
+        curr->next = susp; 
+    } else 
+    {
+        condv->head = susp; 
+    }
+
+    green_t* next = dequeue();
+    running = next; 
+    swapcontext(susp->context, next->context);
+
+    return; 
+}
+
+/* Move the first suspended thread to the ready queue */
+void green_cond_signal(green_cond_t* condv)
+{
+    if (condv->head != NULL)
+    {
+        enqueue(condv->head);
+        condv->head = condv->head->next; 
+    }
+    return; 
 }
