@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <ucontext.h>
+#include <signal.h>
+#include <sys/time.h>
 
 /* Representation of our green thread. */
 typedef struct _green_t
