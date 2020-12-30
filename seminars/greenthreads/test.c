@@ -1,10 +1,72 @@
 #include "green.h"
 
 #define LOOP 1000000
+#define MAX 10
 
 int flag = 0; 
 int count = 0; 
 green_cond_t cond; 
+green_mutex_t mutex; 
+
+/* Producer / Consumer */
+int buffer[MAX];
+int fill_ptr = 0; 
+int use_ptr = 0;
+int loops = LOOP;
+green_cond_t empty;
+green_cond_t fill; 
+
+void* test_yield(void* arg);
+void* test_condv(void* arg);
+void* test_interrupts(void* arg);
+void* test_interrupts_fail(void* arg);
+void* test_mutex(void* arg);
+void* test_condv_mutex(void* arg);
+void put(int val);
+int get(void); 
+void* producer(void* arg);
+void* consumer(void* arg);
+
+int main(void)
+{
+    green_t g0, g1; 
+    int a0 = 0; 
+    int a1 = 1; 
+
+    green_cond_init(&cond);
+
+    print_queue();
+    printf("Count: %d\n", count);
+
+    // green_create(&g0, test_yield, &a0);
+    // green_create(&g1, test_yield, &a1);
+    // green_create(&g0, test_condv, &a0);
+    // green_create(&g1, test_condv, &a1);
+    // green_create(&g0, test_interrupts, &a0);
+    // green_create(&g1, test_interrupts, &a1);
+    // green_create(&g0, test_interrupts_fail, &a0);
+    // green_create(&g1, test_interrupts_fail, &a1);
+    // green_create(&g0, test_mutex, &a0);
+    // green_create(&g1, test_mutex, &a1);
+    // green_create(&g0, test_condv_mutex, &a0);
+    // green_create(&g1, test_condv_mutex, &a1);
+    green_create(&g0, producer, &a0);
+    green_create(&g1, consumer, &a1);
+
+    printf("Count: %d\n", count);
+
+    print_queue();
+
+    green_join(&g0, NULL);
+    green_join(&g1, NULL); 
+    printf("Count: %d\n", count);
+
+    print_queue();
+    
+    printf("done\n");
+
+    return 0; 
+}
 
 void* test_yield(void* arg)
 {
@@ -34,7 +96,7 @@ void* test_condv(void* arg)
             green_cond_signal(&cond);
         } else
         {
-            green_cond_wait(&cond); 
+            green_cond_wait(&cond, NULL); 
         }
     }
     return (void*) 0;
@@ -55,7 +117,7 @@ void* test_interrupts(void* arg)
             green_cond_signal(&cond);
         } else
         {
-            green_cond_wait(&cond); 
+            green_cond_wait(&cond, NULL); 
         }
     }
     return (void*) 0;
@@ -85,13 +147,47 @@ void* test_interrupts_fail(void* arg)
     return (void*) 0;
 }
 
-#define MAX 10
-int buffer[MAX];
-int fill_ptr = 0; 
-int use_ptr = 0;
-int loops = LOOP;
-green_cond_t empty;
-green_cond_t fill; 
+void* test_mutex(void* arg)
+{
+    int id = *(int*) arg; 
+    int loop = LOOP; 
+
+    while (loop > 0)
+    {
+        printf("thread %d: %d\n", id, loop);
+        loop--;
+
+        green_mutex_lock(&mutex);
+        count++;
+        green_mutex_unlock(&mutex);
+    }
+
+    return (void*) 0;
+}
+
+/* Just to verify that the green_cond_wait procedure is correctly implemented (With Mutex) - Final touch */
+void* test_condv_mutex(void* arg)
+{
+    int id = *(int*) arg; 
+    int loop = LOOP; 
+
+    while (loop > 0)
+    {
+        green_mutex_lock(&mutex);
+        while (flag != id)
+        {
+            green_mutex_unlock(&mutex);
+            green_cond_wait(&cond, NULL);
+            green_mutex_lock(&mutex);
+        }
+        flag = (id + 1) % 2;
+        green_cond_signal(&cond);
+        green_mutex_unlock(&mutex);
+        loop--;
+    }
+    return (void*) 0;
+}
+
 
 /* Helpers for Producer / Consumer problem */
 void put(int val)
@@ -117,14 +213,14 @@ void* producer(void* arg)
     int i;
     for (i = 0; i < loops; i++)
     {
-        /* LOCK HERE */
+        green_mutex_lock(&mutex);
         while (count == 0)
         {
-            green_cond_wait(&cond);
+            green_cond_wait(&cond, &mutex);
         }
         put(i);
         green_cond_signal(&cond); 
-        /* UNLOCK HERE*/
+        green_mutex_unlock(&mutex);
     }
     return (void*) 0; 
 }
@@ -135,52 +231,17 @@ void* consumer(void* arg)
     int i;
     for (i = 0; i < loops; i++)
     {
-        /* LOCK HERE */
+        green_mutex_lock(&mutex);
         while (count == 0)
         {
-            green_cond_wait(&cond);
+            green_cond_wait(&cond, NULL);
         }
         int tmp = get(); 
         green_cond_signal(&cond); 
 
-        /* UNLOCK HERE*/
+        green_mutex_unlock(&mutex);
         printf("%d\n", tmp);
     }
     return (void*) 0; 
 }
 
-
-int main(void)
-{
-    green_t g0, g1; 
-    int a0 = 0; 
-    int a1 = 1; 
-
-    green_cond_init(&cond);
-
-    print_queue();
-    printf("Count: %d\n", count);
-
-    // green_create(&g0, test_yield, &a0);
-    // green_create(&g1, test_yield, &a1);
-    // green_create(&g0, test_condv, &a0);
-    // green_create(&g1, test_condv, &a1);
-    // green_create(&g0, test_interrupts, &a0);
-    // green_create(&g1, test_interrupts, &a1);
-    green_create(&g0, test_interrupts_fail, &a0);
-    green_create(&g1, test_interrupts_fail, &a1);
-
-    printf("Count: %d\n", count);
-
-    print_queue();
-
-    green_join(&g0, NULL);
-    green_join(&g1, NULL); 
-    printf("Count: %d\n", count);
-
-    print_queue();
-    
-    printf("done\n");
-
-    return 0; 
-}

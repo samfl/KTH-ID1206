@@ -233,7 +233,7 @@ void green_cond_init(green_cond_t* condv)
 }
 
 /* Suspend current thread on the condtition */
-void green_cond_wait(green_cond_t* condv)
+void green_cond_wait(green_cond_t* condv, green_mutex_t* mutex)
 {   
     /* Prevent a timer-interrupt when manipulating the state of a green thread. */
     sigprocmask(SIG_BLOCK, &block, NULL);
@@ -254,9 +254,44 @@ void green_cond_wait(green_cond_t* condv)
         condv->head = susp; 
     }
 
+    if (mutex != NULL)
+    {
+        // release the lock if we have a mutex
+        green_mutex_unlock(mutex);
+
+        // move suspended thread to ready queue
+        enqueue(mutex->head); 
+    }
+
+    // Schedule the next thread
     green_t* next = dequeue();
     running = next; 
     swapcontext(susp->context, next->context);
+
+    if (mutex != NULL)
+    {
+        // Try to take the lock
+        if (mutex->taken)
+        {
+            // bad luck, suspend
+            if (mutex->head == NULL)
+            {
+                mutex->head = susp; 
+            } else 
+            {
+                green_t* curr = mutex->head; 
+                while (curr->next != NULL)
+                {
+                    curr = curr->next;
+                }
+                curr->next = susp; 
+            }
+        } else 
+        {
+            // Take the lock
+            mutex->taken = TRUE; 
+        }
+    }
 
     /* Unblock the prevention of timer-interrupt! */
     sigprocmask(SIG_UNBLOCK, &block, NULL);

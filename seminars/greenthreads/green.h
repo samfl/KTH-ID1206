@@ -51,7 +51,7 @@ int green_join(green_t* thread, void** val);
 void green_cond_init(green_cond_t* condv);
 
 /* Suspend the current thread on the conition */
-void green_cond_wait(green_cond_t* condv);
+void green_cond_wait(green_cond_t* condv, green_mutex_t* mutex);
 
 /* Move the first suspended threadd to the reay-queue */
 void green_cond_signal(green_cond_t* condv);
