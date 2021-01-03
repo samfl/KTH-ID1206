@@ -1,6 +1,6 @@
 #include "green.h"
 
-#define LOOP 1000
+#define LOOP 10
 #define MAX 10
 
 int flag = 0; 
@@ -71,6 +71,14 @@ int main(void)
     printf("Count: %d\n", count);
 
     print_queue();
+
+
+    /* For pthread tests */
+    pthread_t p0, p1;
+    int a2 = 0;
+    int a3 = 1; 
+    pthread_cond_init(&p_cond, NULL); 
+
     
     printf("done\n");
 
@@ -136,10 +144,10 @@ void* test_p_condv(void* arg)
             printf("thread %d: %d\n", id, loop);
             loop--;
             flag = (id + 1) % 2;
-            green_cond_signal(&p_cond);
+            pthread_cond_signal(&p_cond);
         } else
         {
-            pthread_cond_wait(&p_cond, NULL); 
+            pthread_cond_wait(&p_cond, &p_mutex); 
         }
     }
     return (void*) 0;

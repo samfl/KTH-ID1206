@@ -1,7 +1,7 @@
 #include "green.h"
 #include <pthread.h>
 
-#define LOOP 1000
+#define LOOP 10
 #define MAX 10
 
 int flag = 0;
