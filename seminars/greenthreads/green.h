@@ -8,6 +8,7 @@
 #include <ucontext.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 /* Representation of our green thread. */
 typedef struct _green_t

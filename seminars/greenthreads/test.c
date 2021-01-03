@@ -1,12 +1,14 @@
 #include "green.h"
 
-#define LOOP 1000000
+#define LOOP 1000
 #define MAX 10
 
 int flag = 0; 
 int count = 0; 
 green_cond_t cond; 
 green_mutex_t mutex; 
+pthread_cond_t p_cond; 
+pthread_mutex_t p_mutex;
 
 /* Producer / Consumer */
 int buffer[MAX];
@@ -27,6 +29,13 @@ int get(void);
 void* producer(void* arg);
 void* consumer(void* arg);
 
+void* test_p_yield(void* arg);
+void* test_p_condv(void* arg);
+void* test_p_mutex(void* arg);
+void* test_p_condv_mutex(void* arg);
+void* p_producer(void* arg);
+void* p_consumer(void* arg);
+
 int main(void)
 {
     green_t g0, g1; 
@@ -42,16 +51,16 @@ int main(void)
     // green_create(&g1, test_yield, &a1);
     // green_create(&g0, test_condv, &a0);
     // green_create(&g1, test_condv, &a1);
-    // green_create(&g0, test_interrupts, &a0);
-    // green_create(&g1, test_interrupts, &a1);
+    green_create(&g0, test_interrupts, &a0);
+    green_create(&g1, test_interrupts, &a1);
     // green_create(&g0, test_interrupts_fail, &a0);
     // green_create(&g1, test_interrupts_fail, &a1);
     // green_create(&g0, test_mutex, &a0);
     // green_create(&g1, test_mutex, &a1);
     // green_create(&g0, test_condv_mutex, &a0);
     // green_create(&g1, test_condv_mutex, &a1);
-    green_create(&g0, producer, &a0);
-    green_create(&g1, consumer, &a1);
+    // green_create(&g0, producer, &a0);
+    // green_create(&g1, consumer, &a1);
 
     printf("Count: %d\n", count);
 
@@ -81,6 +90,19 @@ void* test_yield(void* arg)
     return (void*) 0;
 }
 
+void* test_p_yield(void* arg)
+{
+    int i = *(int*) arg; 
+    int loop = LOOP; 
+    while (loop > 0) 
+    {
+        printf("thread %d: %d\n",  i, loop);
+        loop--;
+        pthread_yield(); 
+    }
+    return (void*) 0;
+}
+
 void* test_condv(void* arg)
 {
     int id = *(int*) arg; 
@@ -102,6 +124,27 @@ void* test_condv(void* arg)
     return (void*) 0;
 }
 
+void* test_p_condv(void* arg)
+{
+    int id = *(int*) arg; 
+    int loop = LOOP; 
+
+    while (loop > 0)
+    {
+        if (flag == id)
+        {
+            printf("thread %d: %d\n", id, loop);
+            loop--;
+            flag = (id + 1) % 2;
+            green_cond_signal(&p_cond);
+        } else
+        {
+            pthread_cond_wait(&p_cond, NULL); 
+        }
+    }
+    return (void*) 0;
+}
+
 void* test_interrupts(void* arg)
 {
     int id = *(int*) arg; 
@@ -114,11 +157,7 @@ void* test_interrupts(void* arg)
             printf("thread %d: %d\n", id, loop);
             loop--;
             flag = (id + 1) % 2;
-            green_cond_signal(&cond);
-        } else
-        {
-            green_cond_wait(&cond, NULL); 
-        }
+        } 
     }
     return (void*) 0;
 }
@@ -126,7 +165,6 @@ void* test_interrupts(void* arg)
 /* Shared resource, global shared counter */
 void* test_interrupts_fail(void* arg)
 {
-    int id = *(int*) arg; 
     for (int i = 0; i < 1000000; i++)
     {   
         /* LOCK NEEDED */
@@ -154,12 +192,30 @@ void* test_mutex(void* arg)
 
     while (loop > 0)
     {
-        printf("thread %d: %d\n", id, loop);
+        // printf("thread %d: %d\n", id, loop);
         loop--;
 
         green_mutex_lock(&mutex);
         count++;
         green_mutex_unlock(&mutex);
+    }
+
+    return (void*) 0;
+}
+
+void* test_p_mutex(void* arg)
+{
+    int id = *(int*) arg; 
+    int loop = LOOP; 
+
+    while (loop > 0)
+    {
+        // printf("thread %d: %d\n", id, loop);
+        loop--;
+
+        pthread_mutex_lock(&p_mutex);
+        count++;
+        pthread_mutex_unlock(&p_mutex);
     }
 
     return (void*) 0;
@@ -173,11 +229,12 @@ void* test_condv_mutex(void* arg)
 
     while (loop > 0)
     {
+        printf("thread %d: %d\n", id, loop);
         green_mutex_lock(&mutex);
         while (flag != id)
         {
             green_mutex_unlock(&mutex);
-            green_cond_wait(&cond, NULL);
+            green_cond_wait(&cond, &mutex);
             green_mutex_lock(&mutex);
         }
         flag = (id + 1) % 2;
@@ -188,6 +245,29 @@ void* test_condv_mutex(void* arg)
     return (void*) 0;
 }
 
+/* Just to verify that the green_cond_wait procedure is correctly implemented (With Mutex) - Final touch */
+void* test_p_condv_mutex(void* arg)
+{
+    int id = *(int*) arg; 
+    int loop = LOOP; 
+
+    while (loop > 0)
+    {
+        printf("thread %d: %d\n", id, loop);
+        pthread_mutex_lock(&p_mutex);
+        while (flag != id)
+        {
+            pthread_mutex_unlock(&p_mutex);
+            pthread_cond_wait(&p_cond, &p_mutex);
+            pthread_mutex_lock(&p_mutex);
+        }
+        flag = (id + 1) % 2;
+        pthread_cond_signal(&p_cond);
+        pthread_mutex_unlock(&p_mutex);
+        loop--;
+    }
+    return (void*) 0;
+}
 
 /* Helpers for Producer / Consumer problem */
 void put(int val)

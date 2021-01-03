@@ -24,14 +24,13 @@ static void enqueue(green_t* thread)
 	if (queue_head == NULL)
 	{
 		queue_head = thread;
-		queue_tail = thread;
-		return;
 	} else
 	{
 		queue_tail->next = thread;
-		queue_tail = thread;
-		return;
 	}
+
+	queue_tail = thread;
+	return;
 }
 
 /* Dequeue a thread from the front (head) */

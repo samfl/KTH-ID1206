@@ -6,6 +6,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <ucontext.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <pthread.h>
 
 /* Representation of our green thread. */
 typedef struct _green_t
@@ -25,6 +28,14 @@ typedef struct _green_cond_t
     green_t* head;
 } green_cond_t;
 
+/* Representation of our green_mutex */
+typedef struct _green_mutex_t
+{
+    volatile int taken;
+    // Handle the list
+    green_t* head;
+} green_mutex_t;
+
 /* Print the ready-queue */
 void print_queue(void);
 
@@ -41,9 +52,18 @@ int green_join(green_t* thread, void** val);
 void green_cond_init(green_cond_t* condv);
 
 /* Suspend the current thread on the conition */
-void green_cond_wait(green_cond_t* condv);
+void green_cond_wait(green_cond_t* condv, green_mutex_t* mutex);
 
 /* Move the first suspended threadd to the reay-queue */
 void green_cond_signal(green_cond_t* condv);
+
+/* Initialize a green mutex. */
+int green_mutex_init(green_mutex_t* mutex);
+
+/* Acquire the lock for green mutex */
+int green_mutex_lock(green_mutex_t* mutex);
+
+/* Release the lock for green mutex */
+int green_mutex_unlock(green_mutex_t* mutex);
 
 #endif
