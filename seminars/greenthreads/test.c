@@ -72,13 +72,31 @@ int main(void)
 
     print_queue();
 
-
+    printf("\n Pthread-procedures: \n");   
     /* For pthread tests */
     pthread_t p0, p1;
     int a2 = 0;
     int a3 = 1; 
+    count = 0; 
     pthread_cond_init(&p_cond, NULL); 
+    pthread_mutex_init(&p_mutex, NULL); 
 
+    printf("Count: %d\n", count);  
+
+    // pthread_create(&p0, NULL, test_p_yield, &a2);
+    // pthread_create(&p1, NULL, test_p_yield, &a3);
+    // pthread_create(&p0, NULL, test_p_condv, &a0);
+    // pthread_create(&p1, NULL, test_p_condv, &a1);
+    // pthread_create(&p0, NULL, test_p_mutex, &a0);
+    // pthread_create(&p1, NULL, test_p_mutex, &a1);
+    // pthread_create(&p0, NULL, test_p_condv_mutex, &a0);
+    // pthread_create(&p1, NULL, test_p_condv_mutex, &a1);
+    // pthread_create(&p0, NULL, p_producer, &a0);
+    // pthread_create(&p1, NULL, p_consumer, &a1);
+
+    pthread_join(&p0, NULL);
+    pthread_join(&p1, NULL); 
+    printf("Count: %d\n", count);  
     
     printf("done\n");
 
@@ -104,11 +122,8 @@ void* test_p_yield(void* arg)
     int loop = LOOP; 
     while (loop > 0) 
     {
-        printf("thread %d: %d\n",  i, loop);
         loop--;
-        pthread_yield(); 
     }
-    return (void*) 0;
 }
 
 void* test_condv(void* arg)
