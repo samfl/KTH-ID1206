@@ -38,6 +38,8 @@ void* p_consumer(void* arg);
 
 int main(void)
 {
+    clock_t start_green = clock();
+
     green_t g0, g1; 
     int a0 = 0; 
     int a1 = 1; 
@@ -68,12 +70,16 @@ int main(void)
 
     green_join(&g0, NULL);
     green_join(&g1, NULL); 
+
+    clock_t end_green = clock();
     printf("Count: %d\n", count);
 
     print_queue();
 
-    printf("\n Pthread-procedures: \n");   
+
     /* For pthread tests */
+    printf("\n Pthread-procedures: \n");   
+    clock_t start_pthread = clock();
     pthread_t p0, p1;
     int a2 = 0;
     int a3 = 1; 
@@ -96,8 +102,14 @@ int main(void)
 
     pthread_join(&p0, NULL);
     pthread_join(&p1, NULL); 
+    clock_t end_pthread = clock();
+
     printf("Count: %d\n", count);  
+
+    clock_t diff_green = start_green - end_green; 
+    clock_t diff_pthread = start_pthread - end_pthread; 
     
+    printf("Green-thread: %d, Pthread: %d \n", diff_green, diff_pthread);
     printf("done\n");
 
     return 0; 
