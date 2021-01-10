@@ -1,6 +1,6 @@
 #include "green.h"
 
-#define LOOP 10
+#define LOOP 100000
 #define MAX 10
 
 int flag = 0;
@@ -8,7 +8,7 @@ int count = 0;
 green_cond_t cond;
 green_mutex_t mutex;
 pthread_cond_t p_cond;
-pthread_mutex_t p_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t p_mutex;
 
 /* Producer / Consumer */
 int buffer[MAX];
@@ -38,57 +38,66 @@ void* p_consumer(void* arg);
 
 int main(void)
 {
-    clock_t start_green = clock();
-
+    printf("\n");
+    printf("Green-thread procedures: \n");
     green_t g0, g1;
     int a0 = 0;
     int a1 = 1;
+    count = 0;
+    printf("Count: %d\n", count);
+    print_queue();
 
+    /* Start the timer (Green Threads) */
+    clock_t start_green = clock();
+
+    /* Runtime Initialization of condition variable and mutex lock */
     green_cond_init(&cond);
     green_mutex_init(&mutex);
 
-    print_queue();
-    printf("Count: %d\n", count);
+    /* Delay test */
+    // int i = 0;
+    // while (i < 1000000) { ++i; }
 
     // green_create(&g0, test_yield, &a0);
     // green_create(&g1, test_yield, &a1);
-    // green_create(&g0, test_condv, &a0);
-    // green_create(&g1, test_condv, &a1);
+    green_create(&g0, test_condv, &a0);
+    green_create(&g1, test_condv, &a1);
     // green_create(&g0, test_interrupts, &a0);
     // green_create(&g1, test_interrupts, &a1);
     // green_create(&g0, test_interrupts_fail, &a0);
     // green_create(&g1, test_interrupts_fail, &a1);
-    green_create(&g0, test_mutex, &a0);
-    green_create(&g1, test_mutex, &a1);
+    // green_create(&g0, test_mutex, &a0);
+    // green_create(&g1, test_mutex, &a1);
     // green_create(&g0, test_condv_mutex, &a0);
     // green_create(&g1, test_condv_mutex, &a1);
     // green_create(&g0, producer, &a0);
     // green_create(&g1, consumer, &a1);
 
-    printf("Count: %d\n", count);
-
-    print_queue();
+    // print_queue();
 
     green_join(&g0, NULL);
     green_join(&g1, NULL);
 
-    clock_t end_green = clock();
+    /* Stop the timer (Green Threads) */
+    double time_greenthread = (double) (clock() - start_green) / CLOCKS_PER_SEC;
+
     printf("Count: %d\n", count);
 
-    print_queue();
-
+    // print_queue();
 
     /* For pthread tests */
-    printf("\n Pthread-procedures: \n");
-    clock_t start_pthread = clock();
+    printf("\n");
+    printf("Pthread-procedures: \n");
     pthread_t p0, p1;
     int a2 = 0;
     int a3 = 1;
     count = 0;
+    printf("Count: %d\n", count);
+
+    /* Start the timer (Phreads) */
+    clock_t start_pthread = clock();
     pthread_cond_init(&p_cond, NULL);
     pthread_mutex_init(&p_mutex, NULL);
-
-    printf("Count: %d\n", count);
 
     // pthread_create(&p0, NULL, test_p_yield, &a2);
     // pthread_create(&p1, NULL, test_p_yield, &a3);
@@ -101,16 +110,14 @@ int main(void)
     // pthread_create(&p0, NULL, p_producer, &a0);
     // pthread_create(&p1, NULL, p_consumer, &a1);
 
-    pthread_join(&p0, NULL);
-    pthread_join(&p1, NULL);
-    clock_t end_pthread = clock();
+    pthread_join(p0, NULL);
+    pthread_join(p1, NULL);
+
+    /* Stop the timer (Pthreads) */
+    double time_pthread = (double) (clock() - start_pthread) / CLOCKS_PER_SEC;
 
     printf("Count: %d\n", count);
-
-    clock_t diff_green = end_green - start_green;
-    clock_t diff_pthread = end_pthread - start_pthread;
-
-    printf("Green-thread: %d, Pthread: %d \n", diff_green, diff_pthread);
+    printf("Green-thread: %f, Pthread: %f \n", time_greenthread, time_pthread);
     printf("done\n");
 
     return 0;

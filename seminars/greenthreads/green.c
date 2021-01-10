@@ -26,9 +26,11 @@ static void enqueue(green_t* thread)
 		queue_head = thread;
 	} else
 	{
+        /* Point old tail to new tail */
 		queue_tail->next = thread;
 	}
 
+    /* Always update the tail */
 	queue_tail = thread;
 	return;
 }
@@ -196,7 +198,6 @@ int green_yield(void)
 int green_join(green_t* thread, void** res)
 {
     /* Prevent a timer-interrupt when manipulating the state of a green thread. */
-    sigprocmask(SIG_BLOCK, &block, NULL);
 
     if (!thread->zombie)
     {
@@ -220,7 +221,6 @@ int green_join(green_t* thread, void** res)
     free(thread->context);
 
     /* Unblock the prevention of timer-interrupt! */
-    sigprocmask(SIG_UNBLOCK, &block, NULL);
     return 0; 
 }
 

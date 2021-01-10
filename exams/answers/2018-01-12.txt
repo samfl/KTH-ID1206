@@ -1,0 +1,153 @@
+1.1 Vi returnerar en buffer med Fibonacci-tal som ligger på stacken och kan närsom helst skrivas över av en annnan process. Troligtvis kommer den delvis att skrivas över till nästa funktion. 
+
+1.2 Minnes mappningen i "proc/maps" är enligt följande 
+- Address - Permissions - Offset - Dev - Inode - Pathname - 
+
+* Om raden följer till en sökväg så är minnesmappningen programkod
+* Om raden ej är associerat med en sökväg så innebär [heap] heapen, [stack] stacken [stack:1000] stacken till tråden "1000". 
+* Om raden är tom så mappar addressen anonymt. 
+
+* I den övre regionen så hittar vi processens stack (Växer nedåt)
+* Emellan heapen och stacken så hittar vi mappning för delade biblotek och ser ut som: "/lib/x86_64-linux-gnu/ld-2.23.so"
+* Under koden, read-only datan och global datan si hittar vi processens heap (växer uppåt)
+
+* Permissions
+** r-xp = Koden
+** r--p = Read-only data
+** rw-p = Global data
+** ---p = No permissions or any mapping
+
+1.3 
+- open() kommer returnera en file descriptor
+- fork() returnerar 0 i barnet och barnets PID i föräldern
+-- Alltså, barnet Kommer köra första if-satsen
+-- Och, föräldern kommer köra else-satsen
+- dup() kommer duplicera filedescriptorn  (så den kan användas alternativt)
+-- Argument till dup()
+* Standard Input: File Descriptor: 0
+* Standard Output: File Descriptor: 1
+* Standard Error: File Descriptor: 2
+- execl() kommer att köra en fil som anges av argument 1 följt av argumentet
+
+Både boba (utfört av barn-processen) (prgrammet som skriver ut "Don't get in my way") och dprintf() (utfört av moderprocessen) kommer skriva till samma fil på samma plats och samsas.
+* Inget kommer att skrivas över
+* Men data kan komma att mixas eftersom de delar fil, plats och position
+
+1.4. malloc() & free() - Minska extern fragmentering genom att kalla på en operation X när vi gör operationen free(). 
+* Vi kan utföra operationen coelize (slå ihop). 
+** Detta görs genom att enkelt kolla de närmaste blocken baserat på address (över & under) och om dessa är fria slå ihop. 
+** På detta sätt så vet vi att de ligger bredvid varandra i listan och kan därför slå ihop. 
+** Utan ordningen hade det kunnat vara andra block i listan som hade kunnat vara bredvid, nu behöver vi endast kolla de närmsta. 
+** För coelize måste vi hålla koll på:
+*** Addressen på blocket i listan plus dess storlek = Det friade blockets storlek. 
+*** Det friade blockets storlek plus blockets storlek = nästa blocks address. 
+
+1.5 Intern paging
+* Intern paging med stora sidor hade skapat liten extern fragmentering men troligtvis stor intern fragmentering. 
+* Intern paging med små sidor skulle ge en stor sidtabell som skulle vara svår att hantera i endast mjukvara (utan hårdvara, skulle bara allt för kostsamt).
+* Även en address översättare skulle krävas som delade upp en address i sida och offset. 
+* Att alternativ hade varit att låta processen representera alla objekt med hjälp av väldigt små block (vilket görs i minneshanteringen för listbaserade programmeringsspråk). 
+
+1.6 getcontext()
+* Med hjälp av getcontext() kan vi få en process att själv hantera sina trådar. 
+* Fördelar: 
+** Att låta en process själv styra över sina trådar
+** Ett byte (context switch) mellan 2 trådar skulle ta kortare tid eftersom OS:et skulle ha bytt mellan trådarna istället för hårdvara. 
+** Eftersom vi skulle veta att endast en tråd hade exekverats åt gången, så hade vi kunnat unvika flera synkoniseringsproblem. 
+* Nackdelar: 
+** Vi skulle inte kunna nyttja en processor med flera kärnor. 
+** Om en av trådarna skulle ha utfört en I/O operation, så skulle vi ha blivit helt blockerade och blvit tvungna att vänta in denna. 
+
+
+2.1 count
+* I detta exemplet har vi endast en delad resurs, men denna resurs är endast en loop-referens som ej skrivs till (vi får därför inga kritiska sektioner eller "data race").
+* Varje tråd har en egen stack (kallat thread local storage), därför kommer funktionen som körs och dess variabler att vara privata för de 2 processerna. 
+* Vi kommer alltså att skriva ut "The count is 10" för både process 1 och process 2. (alltså, 2 gånger). 
+* Dvs, varje trådd som kör funktionen hello(), har sin egna version av variabeln "count". 
+
+2.2 Om vi har 2 processer som kommunicerar via en s.k. pipe, en producent och en konsument. Hur kan vi förhindra att producenten skickar mer info än vad konsumenten kan ta emot? (systemet kan krasha)
+* pipes har en implementerad flödeskontroll, så om en producent skulle vilja producera mer info utan att en konsument tar emot, så kan producenten bli suspenderad. 
+* Om konsumenten inte väljer att läsa så kommer vi att suspendera producenten om den försöker skriva. 
+
+2.3 Nätverksinterface & Socket?
+
+3.1 Namnrymd
+* Ready - (scheduled) Running (timeouted) - (I/O request) Blocked (I/O response) - (terminated) Exit
+* Ready <-> Running
+--> scheduled
+<-- descheduled (timeout)
+
+Running --> Blocked (I/O Request [Initiate])
+        --> Exit (Terminated)
+
+Blocked --> Ready (I/O Response [Done])
+
+3.2 Reaktionstid
+* Om vi vill förbättra reaktionstiden som kan vi ändra time-slice parametern, ofta kallad S. 
+* Detta är en parameter som bestämmer hur lång en "Slice" ska vara, dvs hur länge ett visst jobb får kör ut gången som mest.
+* Efter S i tid, så kommer alltid ett kontextbyte att ske. 
+* Om vi har ett alltför lågt S-tal så kommer flera processer endast att hoppa emellan uten att effektivt köra klart, detta pga av kostnaden vi får göra i varje kontextbyte. 
+* Kontextbytes kostnaden kan bli extremt hög i förhållande till den totala körtiden om vi har ett lågt S-tal, däremot har en en snabb respons på samtliga processer eftersom vi snabbt kommer att köra igenom samtliga. 
+* Vi kommer alltså förlora i omloppstid eftersom processer kommer saktare att köra klart. 
+* Vid ett högre S-tal så blir omloppstiden bättre och vi förlitar oss på den överliggande schedulerings algoritmen. 
+* Med ett högra S-tal  innebär samtidigt en sämre responstid. 
+* Vilket S-tal som gäller beror på flera olika faktorer, tex typ av arbete, hur många processer, Vilken scheduleringsalgoritm och vilka egenskaper som anses vara viktigast.  
+* S-talet kan optimeras om man vet lite mer om systemets kapacitet och arbetsbelastningen (tex acceptabel respons)
+
+3.3 Rate Monotonic Scheduling (RMS)
+* Prioriteten bestäms av periodiciteten (lägst period, körs först)
+* Med RMS så blir ett systems belastning summan av e / p, där e är exekveringstiden och p är periodiciteten. 
+* Schema läggaren kan garantera att fungera om lasten är under n * (2^(1/n) - 1), där n är antalet processer.
+* Detta approximeras till 69 %. 
+* Så här får man räkna ihop summan själv och avgöra om den är UNDER 69%. 
+* RMS kan fungera även med högre last (över 69%) men det finns inga garantier. 
+
+4.1 
+* Om man använder segmentering så kan man i längden få problem med extern fragmentering eftersom segmenten ärr olika stora.
+* Detta unviks genom att använda paging (fast storlek på block). Vid fast storlek så kommer vi alltid att allokera ett jämnt antal byte och vi kan enklare hantera fria element. 
+* Eftersom att alla ramar är lika stora, så kan en process tilldelas vilken ram som helst (ökad flexibilitet). Därav tar vi bort antalet luckor i segmentering där platsen är för liten för att allokeras till något passande. 
+* Om sidstorleken är för stor, så riskerar vi att öka den interna fragmenteringen istället. 
+
+4.2 
+* Least Recently Used (LRU) är en sid-ersättningsalgoritm som kommer byta ut sidan som längst bort i tiden är använd. 
+* LRU är dyr att implementera, därför används i praktiken en approximation av LRU. 
+* LRU approximeras genom stöd från hårdvara i form utan an "use bit". 
+** Det finns en "use-bit" per sida i systemet
+** använd-biten finns i minnet, ofta i form utav i en sidtabell. 
+** När en sida refereras till sätts använd-biten till 1. 
+** Mjukvaran (OS:et) har ansvar för att resetta använd-biten. 
+** Detta kan ske genom att implementera en klock-algoritm
+*** I klockcirkeln Lägger vi in samtliga processer, dessa håller ett binärt värde (0 eller 1)
+*** Då vi accessar en sida så sätts biten till 1
+*** Då vi letar efter en sida att slänga ut, letar vi efter en bit 0. 
+*** Vi kommer i en cirkel att gå igenom alla processer och leta efter en 0a. 
+*** Om vi hittar en 1a, kommer denna att rensas till en 0a men vi kommer inte att accessa denna på ett helt varv (därav får den chansen att bevisa sig anväd återigen).
+*** Med denna teknik och perkaren till det aktuella värdet (kallat klockhand), kan vi approximera Least Recently Used algoritmen (LRU). 
+
+4.3 x86 64 bit mode | PTE address = 40 bitar | Virtuella addressens offset 12 bitar till en fysisk address. 52 bitars addresser i fysiskt minne. 48 bitars virtuellt minne  
+Vad finns det för fördel med att använda en 52-bitars fysiskaddress?
+
+* En enskild address kan inte ha mer än 48 bitars addressrymd men vi kan ha flera processer i minnet samtidigt.
+* 2^48 / 2^12 = 2^36 = 2^10 * 2^10 * 2^1 * 2^6 = 64 GB ---> Med endast 48 bitars fysiskt minne, skulle vi endast kunna ha 64 GB RAM
+* Nu kan vi ha 2^52 / 2^12 = 2^40 = 2^10 * 2^10 * 2^10 * 2^10 = 1 TB ---> Med 52 bitar fysiskt minne, kan vi istället ha 1 TB i RAM. 
+
+
+5.1 En mapp innehållet (strukturen)
+Likt en fil har en mapp också ett inode-nummer men innehållet i en mapp är följande: 
+* En lista:
+** Med Entries:
+*** användar namn - låg-nivå namn (inode-nummer) - Filtyp
+Resten av filers innehåll finns beskrivet och refererat till i självaste inoden. 
+
+5.2 Ta bort en fil
+I filens inode så finns en status variabel "referencce count"  som visar hur många hårda länkar vi har till filen. 
+* Om ref-count är 0 och vi tar bort filen, så tar vi fullständigt bort filen
+* Om ref-count är < 0 så kommer vi endast att subtrahera 1 från ref-count och ej radera filen. 
+* Detta pga av att filen inte ska raderas fullständigt eftersom en länk ej är en kopia utan bara en reference till huvud datablocken (filen). 
+
+5.3 Poängen med att skriva nya modifierade kopior av datablock är att utnyttja "copy-on-write", en metod för att dra nytta av sekventiella skrivningar som är snabbare. 
+Om vi vill gå in och ändra små ändringar som kommer vi spendera tid för att läsa in, detta är ineffektivt. 
+En nackdel är att vi kommer över tid samla en massa skräp iform utan inoder och data över disken, denna datan måste Någon gång städas upp. 
+Genom att skriva i slutet av loggen så slipper vi flytta skrivhuvudet. 
+Priset betalas när vi läser in en fil (som i värsta fall är utspridd över hela disken). 
+

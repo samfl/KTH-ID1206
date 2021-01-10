@@ -1,6 +1,6 @@
 #include "green.h"
 
-#define LOOP 100000
+#define LOOP 1000
 #define MAX 10
 
 int flag = 0; 
@@ -66,12 +66,12 @@ int main(void)
     // green_create(&g1, test_interrupts, &a1);
     // green_create(&g0, test_interrupts_fail, &a0);
     // green_create(&g1, test_interrupts_fail, &a1);
-    green_create(&g0, test_mutex, &a0);
-    green_create(&g1, test_mutex, &a1);
+    // green_create(&g0, test_mutex, &a0);
+    // green_create(&g1, test_mutex, &a1);
     // green_create(&g0, test_condv_mutex, &a0);
     // green_create(&g1, test_condv_mutex, &a1);
-    // green_create(&g0, producer, &a0);
-    // green_create(&g1, consumer, &a1);
+    green_create(&g0, producer, &a0);
+    green_create(&g1, consumer, &a1);
 
     // print_queue();
 
@@ -103,10 +103,10 @@ int main(void)
     // pthread_create(&p1, NULL, test_p_yield, &a3);
     // pthread_create(&p0, NULL, test_p_condv, &a0);
     // pthread_create(&p1, NULL, test_p_condv, &a1);
-    pthread_create(&p0, NULL, test_p_mutex, &a0);
-    pthread_create(&p1, NULL, test_p_mutex, &a1);
-    // pthread_create(&p0, NULL, test_p_condv_mutex, &a0);
-    // pthread_create(&p1, NULL, test_p_condv_mutex, &a1);
+    // pthread_create(&p0, NULL, test_p_mutex, &a0);
+    // pthread_create(&p1, NULL, test_p_mutex, &a1);
+    pthread_create(&p0, NULL, test_p_condv_mutex, &a0);
+    pthread_create(&p1, NULL, test_p_condv_mutex, &a1);
     // pthread_create(&p0, NULL, p_producer, &a0);
     // pthread_create(&p1, NULL, p_consumer, &a1);
 
