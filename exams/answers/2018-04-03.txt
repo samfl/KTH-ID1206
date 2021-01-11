@@ -1,0 +1,202 @@
+1.1 fork() - 2 processer kommer dela vissa saker: 
+* Med fork() så kommer moderprocessen och barnprocessen 
+** inte dela på stack
+** inte dela på heap
+** inte dela på globala variabler
+** inte dela på kodarea
+** kommer dela på öppna filer
+
+1.2 
+
+Program: 
+int foo(int x, int y)
+{
+    return x + y; 
+}
+
+int bar()
+{
+    int z; 
+    z = foo(3, 4);
+    return z; 
+}
+
+Vad finns på stacken när vi kommer in i foo? 
+Visa var stackpekaren (ESP) [Ref. till toppen av Stacken] och baspekaren (EBP) [Ref. till nuvarande Stack-ram] pekar någonstans!
+
+När vi kommer in i foo() så kommer stacken se som följande: 
+****** Stack-ram (foo) ******
+
+pekare till förra EBF <-- ESP / EBF
+returaddress
+Pekare till z (i bar)
+3
+4
+****** Stack-ram (foo) ******
+****** Stack-ram (bar) ******
+plats för z 
+****** Stack-ram (bar) ******
+
+1.3 
+* Varje gång vi anropar print_fibs() så kommer vi att köra some_fibs() som i sin tur har en minnesläcka. 
+* Oavsett hur vi jobbar med programmet, så kommer vi om prrogrammet anropas flera gånger att få slut på minne
+* Detta pga av att vi endast allokerar minne och aldrig deallokerar (friar) minne.
+
+1.4 I till exempel Java så allakoeras saker på heapen med hjällp av nyckelordet "new". Annars sker endast allokeringar på stacken. 
+* generellt så allokeras allt som ej är primitiva datatyper på heapen och resten allokeras på stacken. 
+* Eftersom vi i Java inte explicit deallokerar eller "friar" det allokerade minnet på heapen självs, måste detta göras av programmet själv. 
+* Detta löses genom automatisk skräpinsamlare "Garbage Collector". En uppsamlare som kommer hämta all data vars referenser har tagits bort. 
+* Till skillnad från programspråket C som har automatisk minnesallokering (malloc & free).
+
+1.5 Fördelen med att dela ut endast block med en jämn exponent av 2 är:
+* Vi kan länka olika block baserat på storlek i olika frilistor. Detta gör både allokering och deallokering effektivare. 
+* Vid uppdelning av block kan vi smidigt dela på 2 tills ett block passar in.
+* Vid ihop slagning kan vi (om blocken är av 2-potenser) använda oss utav buddy-algoritmen som är effektiv. 
+* Vi kommer få en relativt stor intern fragmentering eftersom hela blocken ej kommer att användas. 
+** Ytterliggare problem som tillkommer är: 
+*** Vi måste veta storleken på ett returnerat block
+*** Vi måste kunna avgöra om ett närliggande block är fritt
+*** Vi måste kunna länka ett nytt ledigt block I rätt fri-lista. 
+
+1.6 yield() eller futex_wait()
+
+Vi har ett spin-lock med sync-val-and-compare (HW instruktion) på ett lås. 
+Om vi inte får låset på första försöket så ber vi OS:et att avbryta exekveringen och låte en annan tråd köra sålänge. 
+Genom att kalla på sched_yield() eller futex_wait(), gör att vi förhindrar att stå i en loop och spinner under hela den tilldelade körtiden.
+Istället så kommer vi med sched_yield att suspendera den körande processen och OS:et kommer få chans att schedulera tråden igen (utan garanti för att låset är ledigt)
+Med futex_wait kommer OS:et att terminera tråden men med villkoret att tråden som har låstet kommer skicka en signal till den tråden som är näst på tur att få lov om låset. 
+När vi får signalen om att låset är ledigt igen, kommer vi att vakna upp, försöka ta låset och sedan köra tråden. 
+
+2.1 Med fork skapar vi en barn-process med moder-processen (kopierad med egen stack, heap, globala variabler och kodarea).
+Alltså, processerna har en global variabel med namnet "count", denna variabel är olika och enskild för varje process.
+Därför, kommer vi att sriva ut 10 (1 gång för barn-processen och 1 gång för förälder-processen). 
+Utskriften blir: "count = 10". eftersom barnprocessen returnerar direkt efter for-loopen. 
+
+2.2 pipes
+* en pipe en en dubbelriktad kanal för kommunikation mellan processer (FALSKT)
+** Pipe är en enkelriktad kanal för inter-process kommunikation. Vi kan kedja samman processer genom standard strömmen (stdin/stdout)
+** Här kan ena processen output direkt riktas till den andra processens input. 
+*** Process_1 | Process_2 | Process_3 (Process_1 resultat ges till Process_2 som i sin tur ger ett resultat till Process_3 som sedan kan skriva ut resultatet till terminalen etc)
+*** Vi kan därför att köra alla processer samtidigt. 
+*** Om en producent skapar data som ej kan tas emot av en konsument så kommer denna att suspenderas om pipes används (pgs flödeskontroll) 
+* När man läser från en pipe så läser man ett meddelande åt gången, man får alltid ett helt, aldrig ett halvt meddelande. (FALSKT)
+* När man läser från eller skriver till en pipe så använder man de vanliga bibloteksrutinerna (SANT)
+
+2.3 Sockettyper
+SOCK_DGRAM
+SOCK_STREAM
+SOCK_SEQPACKET
+
+3.1 Turnaroundtid vs. responstid
+J1, J2, J3 (e) = 3
+
+J1:___
+J2:   ___
+J3:      ___
+   123456789
+Turnaround (avrg) = (3 + 6 + 9) / 3 = 6 
+
+J1, J2, J3 (e) = 3
+S = 1 (Round-Robin)
+J1:_  _  _
+J2: _  _  _
+J3:  _  _  _
+   123456789
+Turnaround (avrg) = (7 + 8 + 9) / 3 = 8
+
+3.2 MLFQ - WTF
+Regel 1: Om prio(A) > prio(B), A schemaläggs
+Regel 2: Om prio(A) ==  prio(B), A & B schemaläggs (Round-Robin)
+Regel 3: Ett nytt jobb får MAX(prio)
+Regel 4a: Om tidsluckan förbrukas så avbryts och sänks prioriteten av detta jobb
+Regel 4b: Om ett jobb initierat en I/O eller kallat på yield(), så behålls prioriteten
+
+Regel 5 (tillagd): Efter en tidperiod, S, kommer alla processer i schemaläggaren att boostas till högsta kön. 
+
+OBS!
+Regel 4a: Om tidsluckan har förbrukats så säkns prio
+Regel 4b: Om ett jobb ger upp CPUn innan tidsintervallet har utgått så består prion. 
+
+Dessa kan slås ihop till Regel 4 (Om vi kan hushålla (account) med tilldelad tid (allotted), alottment):
+Regel 4: När ett jobb har uppnått sin tilldelade tid (oavsett hur många byten som gjorts), så sänks prioriteten. 
+
+* Problemet med denna implementationen är att om ett jobb har flytatts ner till en lägre kö (eller tom lägsta kön) blir det lätt att svälta ut denna
+* Nya processer kommer ständigt att prioriteras före & andra processer med högre prio kommer också att köra före
+* Det kan komma att ta lång tid för ett jobb att köra klart och vi kan skriva program som utnyttjar denna detalj och favoriseras av algoritmen. 
+* Det vi saknar är en "boost", där alla processer flyttas till övre kön (högsta prioritet) för att kunna köra igen. Boost-perioden bestäms av ett tal. 
+* Specifikt kommer icke-interaktiva processer att svälta sålänge det finns interaktiva processer som direkt kräver CPU. 
+
+Alltså slutgiltig MLFQ blir följande: 
+Regel 1: Om prio(A) > prio(B), A körs
+Regel 2: Om prio(A) == prio(B), A & B körs (i Round-Robin)
+Regel 3: Varje nytt jobb får högsta prio. 
+Regel 4: Om ett jobb har förbrukat sin tilldelade tid (oavsett antal byten), så kommer prioriteten att reduceras med 1 nivå. 
+Regel 5: Efter en tidsperiod, S, kommer samtliga jobb att höjas (boostas) till högsta prioritetskön (högsta kön). 
+
+3.3 En Zombie
+* Ett zombie-tillstånd är när en process har kört klart och utfört allt den ska. Men för att komma åt dess resultat så tar vi ej bort processen.
+* På detta sätt, kan vi nå (referera) dess resultat och information utan att den kör. 
+* En zombie-process har alltså terminerat, men dess resultat har ej hämtats upp. 
+* En zombie-process finns kvar till moderprocessen kallar på wait(),och hämtar upp resultatet, eller terminerar själv, och då ärvs barnprocessen av init() som plockar upp resultatet. 
+
+4.1 En Sidad MMU med TLB (En Sid Memory Management Unit med Translation Lookaside Buffer)
+En MMU använder sig av en TLB förr att översätta en virtuell address till en fysisk address. 
+Vi ska identifiera: 
+- Virtuell address 
+- Fysisk address 
+- register för basaddress till sidtabell (PTBR)
+- Offset i sida
+- Sidnummer (VPN)
+- Ramnummer (PFN)
+- TLB Sidtabell
+- Sidtabellspost (Page Table Entry, PTE)
+
+* Svar: Se "MMU-TLB-Scheme.jpg"
+
+4.2 
+* Vi gömmer informationen om ett block, alltså ett block's huvud. Denna informationen finns på minnesplatsen precis före självs blocket (lägre minnesplatsen).
+* Istället för att returnera nästa element i fri-listan så returnera vi nästa element + 1 och får endast data-blocket. 
+* När vi saknar minne helt, returnerar vi också chunk + 1.
+* (void*) chunk + 1 innebär att vi inkrementerar addressen med storleken av ett block "chunk", dvs storleken av struct chunk. 
+* När ett block returneras Måste vi veta hur stort det är: cnk->size = size;
+* Denna informationen skrivs in på en position alldeles bakom den pekare som pekar ut den fria arean. 
+
+4.3 Inverterad Sidtabell
+- En inverterad sidtabell är en sidtabell som givet en processindentifiere och sidnumret returnerar vilken ram som sidan finns i (fysiskt, i minnet). 
+- Tabellen har 1 element per ram i minnet och kan där inte indexeras med hjälp av sidnumret. 
+- Därför används en sökning för att hitta rätt sida. 
+
+* Trots att uppslagningen kommer ta längre tid (vi kommer att behöva söka upp rätt address i tabellen), så tjänar vi i minne. 
+* Istället för att flera sidtabeller (1 per process i systemet), så har vi endast en tabell. 
+* Denna tabell har alltså en post per fysisk address i systemet. 
+* För att snabba upp uppsökningar så implementeras inverterade sidtabeller oftast som hashtabeller. 
+* Filtabeller är endaast datastrukturer, så i detta fallet får vi en mindre tabell men långsammare (sparar in minne, försämrar prestanda)
+* Alltså, en inverteras sidtabell kan delas av alla processer och dess storlek är proportionell mot det fysiska minnet. 
+* Vi kan dra nytta av interverterade sidtabeller när ett system ska hantera många processer och/eller är begränsat till ett litet fysiskt minne. 
+
+5.1 Ett enkelt filsystem (block på 4KB, liten hårddisk på 64 * 4KB)
+* För att kunna bygga ett fungerande filsystem (ett enkelt sådant) så behöver vi följande: 
+** Vi måste ha data region och en region för en inodstabell
+*** Inods tabellen måste vara tillräckligt stor för att kunan representera alla data block (inderna pekar till datablock med filernas innehåll)
+*** Detta garanteras genom att räkna på hur stor en inode är. typisk 256 (2^8) och vi visste att ett block var 4KB (2^12). Därav får vi med 1 block rum med (2^12 / 2^8) inoder = 2^4 = 16.
+*** Eftersom vi har möjlligheten att referera till runt 60 data block, så väljer vi 5 inods block (5 * 16 = 80) så är vi "safe" till inodes-tabellen. 
+*** Alltså 5 / 64 block går till inodstabellen
+** 1 block går till superblocke, för specifik information (metadata) om själva disken
+** 1 block går till inodes-bitmap (4KB för att representera med en 1a eller 0a om ett inodes-block är ledigt eller ej)
+** 1 block går till datablocks-bitmap (4KB för att representera med en 1a eller 0a om ett data-block är ledigt eller ej)
+*** En bitmap på 4KB har möjligheten att representera 4KB = 2^12 * 8 = 32 KB st objekt (inoder eller datablock)
+**** Detta är overkill, men vi gör detta för enkelhetens skull. 
+* DVS, total har vi: 
+** 1 Superblock (information oom filsystemet, metadata)
+** 1 Inodes-bitmap (fri-lista, vilka inodes-block är lediga eller ej)
+** 1 Datablocks-bitmap (fri-lista, vilka data-block är lediga eller e)
+** 5 inodes block (inodes-tabell) [i inodes regionen]
+** 56 data block (i data regionen)
+
+5.2 Innehållet i en mapp
+
+* Om man öppnar en mapp med opendir(path) som man ej har rättigheter till så kommer vi att få tillbaka en NULL-pekare. 
+* Vid  användning av denna (i while-villkoret: "entry = readdir(dirp)) så kommer vi få ett segmenteringsfel. 
+
+5.3 Loggbaserade filsystem
+
