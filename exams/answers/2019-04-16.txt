@@ -1,0 +1,118 @@
+1.1 Vad gör processen nedan? 
+
+int* tomat(int* a, int* b)
+{
+    // Allocate room for gurka
+    int* gurka = (int*) malloc(sizeof(int));
+    
+    if (gurka == NULL)
+    {
+        return -1; 
+    }
+
+    *gurka = *a + *b; 
+    return gurka; 
+}
+
+* Koden adderar värde som pekas på av pekar a, och pekare b. 
+* För att gurka ska kunna nås utanför proceduren så måste vi allokera plats på heapen till resulatet av  a + b. 
+* Plats för resultatet allokeras alltså på heapen. 
+* [Se adderad kod]
+
+1.2 Vad skriv ut när vi kör programmet?
+* Vi kommer att skriva ut "global = 18"
+* Pga att barnprocessen kommer att returnera 0 i sig själv (köra if-satsen utan utskrifter men sin egna global-counter)
+* Föräldern eller mammaprocessen kommer att få tillaka barnets PID och körs koden i else-satsen (inkrementera counter = 17 till counter = 18 och sedan skriva ut denna)
+
+1.3 sync_val_compare_and_swap()
+
+* Om en tråd blir schemalagd och tar låste och direkt därefter suspenderas mot en annan tråd
+** Så kan denna nya tråden spendera hela sin tilldelade tid med att vänta på låset.
+** Detta kan undvikas m.h.a. att ge upp processorn med anropet yield() och på detta sätt låta den suspenderade tråden köra klart. 
+** När denna tråd har kört klart så kan vi sedan köra den andra tråden och försöka ta låset återigen. 
+
+2.1 Från den ena till den andra (pipes, stdio)
+
+* Förutsatt att vi har kompilerade programmmen ones.o och add2.o på samma nivå och står i dess mapp:
+* ./ones | ./add2
+
+2.2 Låta 2 processer dela minne genom att låta båda minnesmappa en fil mha mmap(). 
+-> Minnet blir synligt för bägge processer
+-> På samma sätt som trådar delar på heapen
+-> Vad händer om vi vill dela länkade datastrukturer? 
+-> Vilka problem uppstår och hur hanterar vi detta? 
+
+* Problemet är att den delade minnesarean kan vara mappad till olika virtuella addresser. 
+* Det som för den ena processen är en korrekt länk, är för den andra en address som pekar någon helt annanstans. 
+* Problemet kan lösas genom att låta arean mappas in på samma virtuella addresser eller koda alla länkar som ett offset från där arean börjar. 
+
+3.1 Bonnie Tylor (Schemaläggning) SJF eller "STCF" <anländstid, exekveringstid>
+-> Rita upp ett tidsdiagram över exekveringen och ange omloppstiden för vart och ett av jobben.
+
+* 110 / 40 / 10 / 50 [ms]
+* J1 / J2 / J3 / J4
+* Average: 210 / 4 = 52,5 ms
+
+3.2 Stride schedulering
+
+* När en process har exkverats så kommer dess pass-värdet att inkrementera med stride-värdet, detta värdet kan sätta på flera olika sätt
+* Stride-värdet bör symbolisera hur viktig en process är (högt värde ger lägre prio och vice versa).
+* Alltså, bör processen läggas in i listan på det indexet som beräknas genom stride + pass. 
+* Detta kommer alltså troligen att vara i övre listan och inte i början. 
+* Givet processens nya "pass-värde", så kan vi sedan sortera listan för att lägga detta på rätt plats. 
+
+4.1 Gungor och Karuseller
+- Vi har ett sidindelat minne:
+- Sidstorlek 4 KB = 2^2 * 2^10 = 2^12 B
+- Process: 4 Segment (Kod, Stack, Heap, Extra) [Godtycklig men givna storlekar]
+- Hur mycket förlorar OS:et i intern fragmentering?
+
+* Med hjälp av 50% regeln, att minnet som förloras av fragmentering är i snitt 50% av det allokerade minnet. 
+* Om vi låter varje process's logiska segment (stack, heap, kod och extra) få var sin sida: ger detta 2 KB fragmentering / segment
+** Vi får alltså 2 * 4 = 8 KB fragmentering för varje process. 
+** Kör vi 100 processer (vilket inte behöver vara hellt ovanligt på en modern laptop), får vi en fragmentering på totalt 100 * 8 = 800 KB, nästan 1 MB. 
+
+4.2 Sidindelat minne med sidor på 64 B 
+
+- Föreslå en arkitektur för processorn som ska areta med sidindelat minne
+- Processorn är en 16 bitars 
+- Virtuella addressrymden är på 2^16 byte
+- Föreslå ett schema som använder en hierarkisk sidtabell baserat på sidor om 64 byte och förklara hur addressöversättningen går till
+
+64 B = 2^6 --> Offset = 6 bitar
+VPN = 2^16 / 2^6 = 2^10 --> 10 bitars VPN
+
+Dessa 10 bitar kan delas in för att indexera en sidtabell och en sidomap om 5 bits
+Detta blir 32 B om varderas och därför kan vi anta 2 B sidotabellsposter (PTE'er). 
+Eftersom endast 5 bitar används för indexering, återstår 11 bits för resternade flaggor, och detta bör räcka till diverse flaggor(2 Byte - 5 = 2 * 8 -5 = 16 - 5 = 11 bits). 
+
+2^5 * 2^5 * 2^6
+32  * 32  * 64 
+
+Dessa indexeras genom en PT på 5 bitar (2^5 = 32)
+Och en PD på 5 bitar (2^5 = 16)
+
+En sidtabells komponenter (PD, PT) ska få plats i en sida (64 B, 2^6)
+
+5.1 Filsystem och lagring, vad kan hända? 
+Filsystemet vi har är enkelt  (vi skriver  direkt till inoderna, datan och bitmapparna)
+
+* Om vi endast ändrar i inoderna men inte i bitmapparna eller i datablocken: 
+** Så kommer vi att referera till en diskaddress me skräp på samt att bitmappen markerar denna som ledig. 
+*** Läser vi filen, så läser vi skräpet --> Problem
+*** Ännu värre, om vi använder datablocket till en anna fil (eftersom den är markerad ledig)
+**** Vi kommer att läsa in fel och vi riskerar att skriva över filen från2 håll 
+**** Om datablocket används till att representera en mapp så får vi ett totalt kaos. 
+
+5.2 Loggbaserade filsystem 
+* I ett loggbaserat filsystem så kommer vi att konstant att utnyttja copy-on-write för att skriva uppdateringar till en ny plats i minnet (sekventiellt och snabbare)
+* Vi kommer tillslut att behöva återanvända skräp datan 
+* Skräpdatan samlas upp genom en skräpinsamlare 
+*  Hur skräpinsamlare är implementerade är olika
+** Vi identifierar det block som är längst bak i loggen och om vi kan flytta detta block till början av loggen såkan vi frigöra alla block upp till de då sista blocket i loggen. 
+** Vi upprätthåller en omvänd mappnning som givet ett block ger oss vilken inode som använder blocket. 
+** Då kan alltså ett givet block berätta om blocket används eller inte och vilken inode den tillhör. 
+** När vi kopierar blocket till början av loggen så skapar vi även en kopia av inoden med en uppdaterad lista av block. 
+** Ett block kan avgöras vara använt eller ej genom att smarta funktioner till inoden samt kortslutning genom att införa filversion i imappen (sedan jämföra imapp versin med inodes version)
+
+

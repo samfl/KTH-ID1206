@@ -1,0 +1,231 @@
+1.1 Vad gör proceduren nedan? Var ska gurka allokeras? (På stacken, eller på heapen)
+
+void tomat(int* a, int* b)
+{
+    // allcate room for gurka
+
+    gurka = *a; 
+    *a = *b; 
+    *b = gurka; 
+}
+
+* Proceduren byter plats på pekare a och b. 
+* Efter proceduren är utförd så kommer pekaren a att peka på det som  b gjorde och vice versa. 
+* Eftersom gurka endast är en temporär variabel som har som funktion att tillfälligt hålla i ett värde så är det stacken som gäller. 
+* gurka används endast i proceduren och vi sätter inte någgra referenser utåfrån till dess värde. 
+
+1.2 Vad skrivs ut? 
+
+* moderprocessen och barnprocessen har egen stack, heap, globala variabler och kodareor. 
+* Alltså är varibeln "global" enskild för bägge processerna (de har var sin instans av denna). 
+* fork() kommer returnera 0 i barnprocessen och barnets PID till moderprocessen. 
+* Allstå kommer vi inkrementera global 1 gång (vad proceduren foo gör) i barnprocessen men aldrig skriva ut något. 
+* I moderprocessen kommer vi att: 
+*** hoppa in i else-satsen och därför att inkrementera global 1 gång
+*** Vänta in och samla upp barn-processens värde. 
+*** Skriva ut det aktuella värdet på global, vilket är följande: "global = 18". 
+
+1.3 Hjälp, vad glömmer vi? 
+Diskuterad. 
+* Vi kan antingen gå ovanifrån, beräkna allt som läggs upp på stacken. 
+** Däremot behöver inte stacken precis spegla så som vi tänker konceptuellt pga kanariefåglar och andra optimiseringar. 
+** Vi måste därför tolka andra detaljer
+** Det som är tydligt är var stacken finns, var heapen finns, biblotek  och kodarea
+** Spåra resultatet med hjälp av de givna utskrifterna etc
+** tidigare baspekare & return address till instruktionspekaren till nästa instruktion i den tidigare stackramen. 
+** Glöm ej 0-te pekare vid retur av argument. 
+
+1.4 Hur vet vi hur stort blocket är som ska frågöras?
+
+* Genom att gömma en header med storleksinformationen innnan det utgivna blocket
+** Baserat på addressen av det utgivna blocket, så kan vi enkelt beräkna huvudet position innan i minnet. 
+** Vi tar sedan värdet på den angivna storleken och slutför "free". 
+
+1.5 IDT:n
+
+* Det finns en Interrupt Descriptor Table som bestämmer vad vi ska ta för utvägar vid ett avbrott.
+* Tabellen finns i kernel space och är därför skyddad från att ändras. 
+* Registret är inte skyddat fysiskt, men skulle instruktionen för att ändra IDT registret (IDTR) att utföras i user mode, 
+* Så skulle vi få en interrupt som OS:et fångar (via ett hopp till IDT:n). 
+* Instruktionen för att ändra IDT registret är en priviligerad instruktion och kan endast utföras i kernel mode. 
+
+1.6 Ett OS som implementerar POSIX
+* POSIX funktionalitet tillhandahålls genom både systemanrop och bibloteksfunktioner.
+** Eftersom bibloteksfunktioner är implementerade i user space, så är de snabbare (vi slipper kostsamme kontextbyten)
+** PGA prestanda skillnaden så kan vi implementera så mycket som möjlligt i user space (bibloteksfunktioner).
+** Ett exempel på en bibloteksfunktion är malloc och free. 
+** Bibloteksfunktioner har däremot en nackdel, de har ej tillgång till OS:ets globala datastrukturer och kan därför inte erbjuda all funktionalitet
+** Ett exempel på ett POSIX system anrop är chmod() för att ändra rättigheter på en fil.
+  
+
+2.1
+Bound Buffer problem - Producent / Konsument
+* När låser sig en tråd på ett villkor?
+* När låser sig en tråd på ett lås?
+* Signaler mellan trådar
+* Hörnfall - Vad händer om vi blir avbrutna i vissa lägen? 
+
+2.2
+Pipes har inbyggd flödeskontroll så vi behöver e göra någonting. 
+
+2.3 Skapandet av en socket - SOCK_STREAM eller SOCK_DGRAM vilka egenskaper har dessa?
+* SOCK_STREAM är en tillförlitlig dubbelriktad kommunikation (anslutningsbaserad byte-ström)
+* SOCK_DGRAM är en otillförlitlig enkelriktad kommunikation (datagram byte-ström av meddelanden med fast längd)
+
+3.1 Bonnie Tylor (STCF - Shortest Time to Completion First, även kallat preemptive Shortest Job First (SJF))
+
+J1: <0, 40>
+J2: <0, 30> 
+J3: <10, 10> 
+J4: <20, 30>
+
+Se bilden SJF(STCF)-omloppstid (110, 40, 10, 50)
+
+3.2 Random fungerar bättre än väntat för att byta ut sidor till disken (kallat swapping)
+- Vi har en process som kör och använder 100 sidor
+- Grafen visar träff ration för olika storlek på minnet (antal ramar)
+- När antalet sidor i minnet är hälften av processens sidor, kan vi förvänta oss 50 % träff, men vi får bättre!
+
+* En rimlig förklaring är att processen ej refererar helt slumpmässigt till processen utan den refererar till vissa sidor oftare (tidslokalitet)
+* eller att vissa sidor refereras upprepande gånger i följd (tidslokalitet)
+
+3.3 Omvänd prioritet
+
+Exempel: 
+* Vi har 2 trådar (T1 & T2)
+* T2 har högre schedulering prioritet och kommer alltid att köra före T1 (om både är scheduleringbara)
+* T1 körs endast om T2 t.ex. är blockerad av tex I/O operation. 
+* Om T2 är blockerad så kommer T1 att köra och sno låset & gå in i en kritisk sektion. 
+* T2 blir klar att köra och scheduleras direkt av CPUn. 
+* T2 försöker sno låset (som T1 sitter på) och börjar spinna. 
+* Eftersom vi har ett spinn-lås så kommer vi att spinna för evigt. 
+
+* Vi har ytterligare ett exempel med trådarna T3, T2 & T1 där T3 har högst, T1 har lägst prio. 
+* T1 börjar köra och snor låset.
+* T3 Körs sedan och avbryter T1 och försöker ta låset men lägger sig i väntan på T1. 
+* Här börjar sedan T2 att köras (högre prio än T1), men lägre prio än T3.. (!). 
+* Eftersom T2 har högre prio än T1 så bromsar vi även T3 vilket blir skevt.. 
+
+** Prioritetsomvändningn kan lösas genom att sätta alla trådar tilll samma prioritet
+** Det kan även lösas genom en teknik kallat för prioritet-arv. 
+
+4.1 klockalgoritmen används för att implementera en approximativ LRU (Least Recently Used) algoritmen. 
+
+* LRU används som sidersättningsalgoritm och kan implementeras approximativt genom följande: 
+** Vi implementerar en cirkulär lista med en referens till varje sida. Varje referens innehåller om sidan har blivit skriven nyligen till eller ej (1a eler 0a)
+*** Vi länkar alla inkkluderade sidor i TLB (cirkulärt). 
+*** Om en sida refereras till så sätter vi en 1a
+*** Om vi med vår klockarm (den referensen som visar var i cirkeln vi står) hittar en 1a, så sätter vi denna till en 0a och går ett steg i ringen
+*** Varje gång vi med vår klockarm hittar en 0a, så slänger vi ut den referade sidan. 
+*** Om alla sidor är satta till ett så kommer vi gå ett helt varv och nolla samtliga, här är det inte längre säkert att vi slänger ut en sida som är refererad till längst bort i tiden. 
+
+4.2 
+
+* Givet ett block av storlek k, som hittar sin kompis som vi kan slå ihop med:
+** Vi måste först hitta vår buddy
+** Sedan måste vi kolla på denna är fri
+
+* Givet att vi har hittat en buddy: 
+** Nu kan vi slå ihop blocken
+** Detta görs genom att ta reda på vilket block som är huvudblock (kommer först)
+** Detta block dubbleras sedan
+** Det samman slagna blocket frigörs sedan i listan rekursivt
+** När man inte längre hittar en buddy, så måste vi länka in det slutgiltiga blocket först i fri-listan för dess storlek. 
+
+4.3 x86_32 sidor på 512 Byte
+
+Vi ska ha ett sidindelat virtuellt minne
+
+Ordlängd: 32 bitar
+Sidstorlek: 512 bytes
+Hierarkisk sidtabell byggd på sidor om 512 bytes
+Virtuell addressrymd (måste ej vara fullt 32 bitar)
+
+* Vi har en addressrymds storlek på 2^32
+* Vi har en Offset på 2^9 
+* Vi har en potentiellt virtuell addressrymd på 2^32 / 2^9 = 2^23, för att göra det enklare att dela in varje komponent så de får plats inom en sida så tar vi bort 2 bit
+* Detta ger oss 2^21, Om vi antar en Sidotabellspost är på 4 B, ger detta oss 2^9 / 2^2 = 2^7, Alltså är sidtabellens index 7 bits
+* Kvarstående är 14 bits  (14 entries, 14 PTE's), vilket resulterar i att tabellen spannar 2^14 * 2^2 / 2^9 = 2^7 pages, som därför indexera i nästa nivå med 7 bits
+* Alltså får vi 7 bit | 7 bit | 7 bit | 9 bit
+                [PD-0]| [PD-1]| [PT-0]| [Offset]
+
+virtuell address --> Virtuellt Sidnummer + Offset
+
+Fysisk address --> Ramnummer + Offset
+
+Virtuellt Sidnummer --> TLB --> Virtuellt Sidnummer + PTBR (Sidtabells basregister)
+
+Sidtabell + Virtuellt Sidnummer + PTBR = Sidtabellspost
+
+************** Exampel från boken **************
+Addressrymd av storleken: 16 KB
+Sidstorlek: 64 B
+
+-> Eftersom 16 KB = 2^4 * 2^10 = 2^14, så har vi en virtuell addressrymd på 14 bits. 
+-> Eftersom 64 = 2^6, så har vi en offset på 6 bits
+-> Antal sidnummer i en sidtabell blir då alltså: (2^14 / 2^6) = 2^8, 256 poster.
+-> Vi antar att en PTE (sidtabellspost) är på storleken 4 B så får vi ut 256 * 4 B = 2^10 = 1 KB stor tabell
+-> Givet Siddstorleken på 64 B, så kan vi dela upp denna tabell på 2^10 / 2^6 = 2^4 = 16 64-Byte pages (varje page kan hålla 16 PTE's)
+-> En Pagemap behöver 1 PTE per sida i sidtabellen, alltså har Sidmappen 16 st poster. 
+-> För att indexera 16 poster så behövs 4 bits (2^4 = 16)
+-> Vi beräknar PDE-addressen = PDBR + PDI + sizeof(PDE) => PDE Addr = PDBR + PDI + 4B
+
+************** Exampel från boken **************
+
+
+5.1 Vad ligger var? (Para ihop egenskaper med plats i minnet)
+
+Egenskaper: 
+1. nuvarande skrivposition 
+2. filnamnet som text
+3. storleken på filen
+4. mappning av stdin
+
+Plats: 
+a. element i tabellen över öppnafiler
+b. inode för filen
+c. filens datablock
+d. map där länk till filen finns
+e. tabell för fildeskriptorer
+
+Svar: 
+1a (nuvarande skrivposition återfinns som ett element i tabellen för öppna filer)
+2d (filnamnet som text återfinns i map där länk till filen finns)
+3b (storleken på filen återfinns i filens inode)
+4e (mappningen av stdin återfinns i tabellen för fildeskriptorer)
+
+5.2 Olika typer (chmode & permission)
+
+Unix file permissions
+* Uppdelat i 4 stycken:
+** 1. Filtyp [3 utvägar: vanlig fil (-), mapp (d), länk (i)]
+** 2. Filtillåtelse för ägaren
+** 3. Filtillåtelse för ägarens grupp
+** 4. Filtillåtelse för andra användare
+
+** En fil graderas enligt följande: {<filtyp> <user> <group> <others>}
+** Exempel 1: - rwx rwx rwx
+** Exempel 2: drwxrwxr-x (en map full behörighet till användaren, användaren grupp och läs och körrättigheter till andra användare)
+** Exempel 3: -rwxrwxr-x (en vanlig fil med full behörighet till användaren, användarensgrupp och skriv och läsrättigheter till andra användare)
+** Exempel 4: lrwxrwxrwx (en mjuk länk, en symbolisk länk med full behörighet till alla användare)
+** Exempel 5: prw-r--r-- (en pipe)
+
+* Svar:
+** bar.doc är en map
+** cave är en exekverbar fil
+** foo.pdf är en symbolisk (mjuk länk)
+** gurka är en vanlig fil (ej exekverbar)
+** sesame är en pipe 
+
+
+5.3 Journal-baserat filsystem, Sant eller Falskt?
+- Det är viktigt att transaktioner genomförs (checkpoint) i samma ordning som de skapades
+* Korrekt, eftersom transaktioner kan röra samma block, då är det den senaste som gäller (vi bör därför en ändra ordningen)
+
+- En transaktion är betraktad som giltig i den stund som den skrivs i fullo i journalen
+* Om en transaktion är halv skriven, så är den ej betraktad som giltig, men helt skriven så är den giltig oavssett om vi har uppdaterat checkpoint de verkliga sektorerna på hårddisken.
+
+- I en återstart efter en crash måste vi vara noga så att  vi inte genomför (checkpoint) en transaktion 2 gånger. 
+* Huvudsaken är att transaktionerna utförs efter en omstart.
+* Eftersom operationerna är idempotenta (samma resultat oavsett fler operationer) så gör det ingenting att vi försöker igen för att garantera ordning och utförande. 
+
